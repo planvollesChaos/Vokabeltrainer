@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Vokabeltrainer</title>
 <meta name="robots" content="noindex, nofollow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Vokabeltrainer">
+<meta property="og:description" content="Englisch-Vokabeln richtig schreiben lernen – unsere Familien-App. Einmal öffnen, dann geht es los.">
+<meta property="og:image" content="https://planvolleschaos.github.io/Vokabeltrainer/icon-512.png">
+<meta property="og:url" content="https://planvolleschaos.github.io/Vokabeltrainer/">
+<meta name="description" content="Englisch-Vokabeln richtig schreiben lernen – unsere Familien-App.">
 <meta name="theme-color" content="#8B6FC4">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
@@ -407,6 +413,23 @@ function copyText(t,el){
   function fallback(){prompt("Zum Kopieren:",t);}
   try{navigator.clipboard.writeText(t).then(function(){el.textContent="Kopiert ✔";el.className="msg ok";},fallback);}catch(e){fallback();}
 }
+function famLink(){return location.origin+location.pathname+"#fam="+fam();}
+var FAM_TXT="Hallo! Das ist unser Vokabeltrainer, nur für unsere Familie. Einmal öffnen, dann ist dein Gerät verbunden und du kannst losüben:";
+function shareFam(msgEl){
+  if(navigator.share){navigator.share({title:"Vokabeltrainer",text:FAM_TXT,url:famLink()}).catch(function(){});}
+  else copyText(FAM_TXT+"\n"+famLink(),msgEl);
+}
+function showQR(box){
+  if(box.firstChild){box.replaceChildren();return;}
+  function draw(){
+    var q=qrcode(0,"M");q.addData(famLink());q.make();
+    box.innerHTML=q.createSvgTag({cellSize:5,margin:3,scalable:true});
+    var svg=box.firstChild;if(svg&&svg.style)svg.style.cssText="width:240px;max-width:100%;height:auto;background:#fff;border-radius:12px";
+    box.append(h("p",{class:"soft",style:"margin:6px 0 0"},"Mit der Kamera des anderen Geräts scannen und den Link öffnen."));
+  }
+  if(window.qrcode)draw();
+  else{var sc=document.createElement("script");sc.src="qr.js";sc.onload=draw;sc.onerror=function(){box.textContent="Der QR-Code konnte nicht geladen werden.";};document.head.append(sc);}
+}
 function familyCard(){
   var msg=h("div",{class:"msg"}),code=fam();
   if(!code){
@@ -417,12 +440,16 @@ function familyCard(){
       h("p",{class:"soft",style:"margin:12px 0 4px"},"Oder dieses Gerät mit einer bestehenden Familie verbinden:"),
       h("div",{class:"row"},inp,h("button",{class:"btn",onclick:function(){var c=parseCode(inp.value);if(!c){msg.textContent="Das sieht nicht wie ein Familiencode aus.";msg.className="msg bad";return;}setFam(c);}},"Verbinden")),msg);
   }
+  var qrBox=h("div",{class:"center",style:"margin:8px 0"});
   var at=+(localStorage.getItem("vt:syncAt")||0),err=localStorage.getItem("vt:syncErr");
   return h("div",{class:"card"},h("h2",{style:"margin-top:0"},"👨‍👩‍👧 Familie & Geräte"),
     h("p",null,err?"⚠️ Abgleich fehlgeschlagen ("+err+")":at?"✓ Verbunden · zuletzt abgeglichen "+new Date(at).toLocaleString("de-DE",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"Verbunden"),
     h("div",{class:"row"},
       h("button",{class:"btn",onclick:function(){msg.textContent="Gleiche ab …";pullAll().then(function(){settings(true);});}},"🔄 Jetzt abgleichen"),
-      h("button",{class:"btn primary",onclick:function(){copyText(location.origin+location.pathname+"#fam="+code,msg);}},"📋 Link für andere Geräte kopieren")),
+      h("button",{class:"btn primary",onclick:function(){shareFam(msg);}},"📤 Link teilen"),
+      h("button",{class:"btn",onclick:function(){copyText(FAM_TXT+"\n"+famLink(),msg);}},"📋 Nachricht kopieren"),
+      h("button",{class:"btn",onclick:function(){showQR(qrBox);}},"▣ QR-Code zeigen")),
+    qrBox,
     h("p",{class:"soft",style:"margin:6px 0"},"Öffnet ein Kind diesen Link einmal auf seinem Gerät, ist es mit der Familie verbunden. Bitte nicht weitergeben, wer den Link hat, kann den Lernstand sehen."),
     h("p",{class:"soft",style:"margin:6px 0;word-break:break-all"},"Familiencode: "+code),msg,
     h("button",{class:"btn small",onclick:function(){if(confirm("Dieses Gerät von der Familie trennen? Der Lernstand bleibt auf dem Gerät, wird aber nicht mehr abgeglichen.")){try{localStorage.removeItem("vt:fam");}catch(e){}settings(true);}}},"Verbindung trennen"));
