@@ -1,0 +1,988 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vokabeltrainer</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#8B6FC4">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{
+  --paper:#FCFBF8; --paper-deep:#F3EFE6; --edge:#DDD6C8; --ink:#1B1A1E; --soft:#6E6A63;
+  --blue:#3D6BD6; --blue-deep:#2C51AC; --lilac:#8B6FC4; --lilac-deep:#6B51A3;
+  --ok:#3F8A5C; --ok-bg:#E6F2E9; --bad:#C2506B; --bad-bg:#FAE9ED; --trap:#E8A33D; --trap-bg:#FFF1D6;
+}
+@media (prefers-color-scheme:dark){:root{
+  --paper:#131316; --paper-deep:#1D1C22; --edge:#312F39; --ink:#F3EFE7; --soft:#A9A49B;
+  --blue:#7FA3F5; --blue-deep:#A9C1FF; --lilac:#B79AE8; --lilac-deep:#CFB9F7;
+  --ok:#6FCB93; --ok-bg:#1D3126; --bad:#E98BA4; --bad-bg:#35222A; --trap:#F0B964; --trap-bg:#3A2F18;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper) url(bilder/hintergrund-hell-v2.webp) center bottom/cover fixed no-repeat;color:var(--ink);font-family:"Baloo 2","Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:18px;line-height:1.35}
+@media (prefers-color-scheme:dark){body{background:var(--paper) url(bilder/hintergrund-dunkel.jpg) center bottom/cover fixed no-repeat}}
+#app{max-width:720px;margin:0 auto;padding:16px 16px 48px}
+h1{font-size:28px;margin:8px 0 4px} h2{font-size:22px;margin:20px 0 8px}
+p{margin:6px 0}.soft{color:var(--soft)}.center{text-align:center}
+.card{background:var(--paper-deep);border:2px solid var(--edge);border-radius:18px;padding:16px;margin:12px 0}
+.row{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;margin:10px 0}
+.btn{font:inherit;font-weight:700;border:2px solid var(--edge);background:var(--paper);color:var(--ink);border-radius:14px;padding:12px 18px;min-height:52px;cursor:pointer;touch-action:manipulation}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--lilac);border-color:var(--lilac-deep);color:#fff}
+.btn.blue{background:var(--blue);border-color:var(--blue-deep);color:#fff}
+.btn.small{min-height:40px;padding:6px 12px;font-size:16px}
+.stars{white-space:nowrap;letter-spacing:1px}.stars i{font-style:normal;color:var(--edge)}.stars i.on{color:#E8A33D}
+.pbar{height:8px;border-radius:99px;background:var(--paper);border:1px solid var(--edge);overflow:hidden;margin-top:4px}.pbar i{display:block;height:100%;background:var(--lilac);border-radius:99px;transition:width .4s}
+.pbar.big{height:16px}.wl .wr{text-align:right}.wl small{display:block}
+.pic{display:block;max-width:100%;height:auto;margin:6px auto}.pic.hero{max-height:170px}.pic.small{max-height:130px}
+.avatar{width:56px;height:56px;object-fit:contain;flex:none}.avatar.big{width:96px;height:96px;display:block;margin:0 auto 6px}
+.chest{float:right;width:96px;height:auto;margin:0 0 4px 8px}.card .stats{clear:both}
+.pic.mini{display:inline-block;height:38px;width:auto;margin:0 6px 0 0;vertical-align:middle}
+.wbars{position:relative;display:flex;gap:6px;align-items:flex-end;height:96px;margin:8px 0}.wbars .goal{position:absolute;left:0;right:0;border-top:2px dashed var(--ok);pointer-events:none}.wbars .goal small{position:absolute;right:0;top:-16px;font-size:11px;color:var(--ok)}.wb i.ok{background:var(--ok)}.wb .stack{width:70%;display:flex;flex-direction:column;justify-content:flex-end}.wb .stack i{width:100%}.wb i.xtra{background:#E8A33D;border-radius:6px 6px 0 0}.wb .stack i.ok,.wb .stack i.on{border-radius:0 0 2px 2px}.wb .stack i.xtra+i.ok{border-radius:0 0 2px 2px}
+.srank{margin:6px 0}.sr{margin:5px 0}.srt{display:flex;align-items:center;gap:8px}.srt small{flex:1}.srt b{min-width:28px;text-align:right}.sr .pbar{margin-top:2px;height:7px}.pbar.gold i{background:#E8A33D}
+.track{position:relative;height:14px;background:var(--paper);border:2px solid var(--edge);border-radius:99px;margin:22px 8px 8px}.track i{display:block;height:100%;background:linear-gradient(90deg,var(--lilac),var(--blue));border-radius:99px;transition:width .5s}.track .rk{position:absolute;top:-24px;transform:translateX(-50%) rotate(45deg);font-size:26px;transition:left .5s}.wb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;text-align:center}.wb small{font-size:12px;color:var(--soft)}.wb i{display:block;width:70%;background:var(--edge);border-radius:6px 6px 2px 2px}.wb i.on{background:var(--lilac)}
+.avatar.wide{width:92px;height:56px}.avatar.big.wide{width:170px;height:100px}
+.avatar.ph{display:inline-flex;align-items:center;justify-content:center;font-size:34px;background:var(--paper-deep);border-radius:50%;width:56px;height:56px}.avatar.big.ph{width:96px;height:96px;font-size:56px;margin:0 auto 6px}
+.chip.locked{opacity:.55;cursor:default;display:inline-flex;align-items:center}
+.certcv{width:100%;height:auto;display:block;border-radius:8px;box-shadow:0 4px 18px rgba(0,0,0,.18);margin:12px 0}
+.cert{background:#FBF3DC url(bilder/diplom-hintergrund.png) center/100% 100% no-repeat;border:6px double #B9955B;border-radius:6px;padding:24px;margin:12px 0;color:#3a2f1c;text-align:center;aspect-ratio:1.414}
+.cert-in{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;position:relative;padding:8px 6%}
+.cert-top{font-weight:800;font-size:28px;letter-spacing:6px;color:#6B51A3}.cert-name{font-size:44px;margin:4px 0}.cert-topic{font-size:32px;color:#2C51AC;margin:2px 0}
+.cert-s{margin:4px 0}.cert-date{margin-top:14px;font-weight:700}.cert-seal{position:absolute;right:4%;bottom:4%;width:90px;max-height:90px}
+@media print{body{background:#fff}.noprint{display:none!important}.cert{border-width:4px;margin:0;width:100%}}
+.btn.playing{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn.big{font-size:22px;padding:16px 26px;width:100%}
+.btn[disabled]{opacity:.35;cursor:default}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:inherit;border:2px solid var(--edge);background:var(--paper);color:var(--ink);border-radius:999px;padding:8px 14px;min-height:44px;cursor:pointer}
+.chip.on{background:var(--blue);border-color:var(--blue-deep);color:#fff}
+.chip small{opacity:.75;margin-left:4px}
+.kids{display:grid;gap:12px;margin-top:20px}
+.kid{font:inherit;font-size:24px;font-weight:800;color:#fff;border:0;border-radius:20px;padding:22px;cursor:pointer}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}.top h1{font-size:24px}.top .btn{white-space:nowrap}
+.badge{background:var(--blue);color:#fff;border-radius:999px;padding:4px 12px;font-weight:700;font-size:15px;white-space:nowrap}
+.bar{flex:1;height:12px;background:var(--paper-deep);border:2px solid var(--edge);border-radius:99px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--lilac);transition:width .3s}
+.prompt{text-align:center;margin:10px 0 6px}
+.big-emoji{font-size:64px;line-height:1.1}
+.de{font-size:24px;font-weight:700}
+.word{font-size:40px;font-weight:800;letter-spacing:2px;text-align:center;margin:10px 0;word-break:break-word}
+.word.small{font-size:30px}
+.trap{background:var(--trap-bg);color:var(--trap);border-bottom:4px solid var(--trap);border-radius:6px;padding:0 2px}
+.blanks{font-size:30px;letter-spacing:6px;color:var(--soft);white-space:pre-wrap}
+.tin{flex:1;min-width:0;font:inherit;font-size:28px;font-weight:700;padding:10px 14px;border:3px solid var(--edge);border-radius:14px;background:var(--paper);color:var(--ink);text-align:center}
+.tin:focus{outline:none;border-color:var(--blue)}
+.slots{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:14px 0}
+.slot,.tile{min-width:46px;height:56px;border-radius:12px;font:inherit;font-size:28px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;padding:0 8px}
+.slot{border:3px dashed var(--edge);background:var(--paper);color:var(--ink)}
+.slot.fixed{border:3px solid transparent;background:transparent}
+.slot.fill{border:3px solid var(--blue);cursor:pointer}
+.slot.wide{min-width:auto}
+.sp{width:18px}
+.tile{border:3px solid var(--lilac-deep);background:var(--lilac);color:#fff;cursor:pointer;touch-action:manipulation}
+.tile[disabled]{opacity:.25}
+.tile.key{min-width:44px;height:50px;font-size:22px;background:var(--paper);color:var(--ink);border-color:var(--edge)}
+.keys{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:10px 0}
+.tiles{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:10px 0}
+.msg{min-height:28px;text-align:center;font-weight:700;color:var(--blue-deep)}
+.msg.ok{color:var(--ok)} .msg.bad{color:var(--bad)}
+.fb{border-radius:16px;padding:14px;margin:12px 0;text-align:center}
+.fb.bad{background:var(--bad-bg);border:2px solid var(--bad)}
+.fb.ok{background:var(--ok-bg);border:2px solid var(--ok)}
+.diff span{display:inline-block;min-width:22px;padding:0 3px;border-radius:5px;font-weight:800;font-size:28px}
+.diff .x{background:var(--bad-bg);color:var(--bad);text-decoration:underline}
+.diff .g{color:var(--ok)}
+.dots{display:inline-flex;gap:3px;vertical-align:middle}
+.dots i{width:9px;height:9px;border-radius:50%;background:var(--edge)}
+.dots i.on{background:var(--lilac)} .dots i.done{background:var(--ok)}
+.wl{display:grid;grid-template-columns:36px 1fr auto;gap:8px;align-items:center;padding:8px 4px;border-bottom:1px solid var(--edge)}
+.wl button{font:inherit;background:none;border:0;color:var(--ink);text-align:left;font-weight:700;cursor:pointer;padding:0}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center}
+.stats b{display:block;font-size:26px}
+.shake{animation:sh .35s}
+@keyframes sh{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.note{background:var(--trap-bg);border:2px solid var(--trap);border-radius:12px;padding:8px 12px;font-size:16px;margin:8px 0}
+label.row{align-items:center}
+input[type=text].plain{font:inherit;padding:8px 12px;border:2px solid var(--edge);border-radius:10px;background:var(--paper);color:var(--ink);min-width:0;flex:1}
+a{color:var(--blue-deep)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function(){
+'use strict';
+var BASE={"topics":["Tiere","Körper","Kleidung","Farben","Wetter & Wochentage","Familie","Zahlen","Wörter & Wendungen","Schulsachen","Haustiere","Was Tiere können","Auf dem Bauernhof","In der Stadt"],"words":[{"en":"bat","de":"die Fledermaus","e":"🦇","t":"Tiere"},{"en":"bird","de":"der Vogel","e":"🐦","t":"Tiere"},{"en":"crocodile","de":"das Krokodil","e":"🐊","t":"Tiere"},{"en":"elephant","de":"der Elefant","e":"🐘","t":"Tiere"},{"en":"fox","de":"der Fuchs","e":"🦊","t":"Tiere"},{"en":"frog","de":"der Frosch","e":"🐸","t":"Tiere"},{"en":"hippo","de":"das Nilpferd","e":"🦛","t":"Tiere"},{"en":"lion","de":"der Löwe","e":"🦁","t":"Tiere"},{"en":"monkey","de":"der Affe","e":"🐒","t":"Tiere"},{"en":"rat","de":"die Ratte","e":"🐀","t":"Tiere"},{"en":"snake","de":"die Schlange","e":"🐍","t":"Tiere"},{"en":"arm","de":"der Arm","e":"","t":"Körper"},{"en":"ear","de":"das Ohr","e":"👂","t":"Körper"},{"en":"eye","de":"das Auge","e":"👁️","t":"Körper"},{"en":"finger","de":"der Finger","e":"","t":"Körper"},{"en":"foot","de":"der Fuß","e":"🦶","t":"Körper"},{"en":"hair","de":"die Haare","e":"","t":"Körper"},{"en":"hand","de":"die Hand","e":"✋","t":"Körper"},{"en":"head","de":"der Kopf","e":"","t":"Körper"},{"en":"knee","de":"das Knie","e":"","t":"Körper"},{"en":"leg","de":"das Bein","e":"","t":"Körper"},{"en":"mouth","de":"der Mund","e":"👄","t":"Körper"},{"en":"nose","de":"die Nase","e":"👃","t":"Körper"},{"en":"shoulder","de":"die Schulter","e":"","t":"Körper"},{"en":"toe","de":"die Zehe","e":"","t":"Körper"},{"en":"tooth","de":"der Zahn","e":"🦷","t":"Körper"},{"en":"boots","de":"die Boots","e":"🥾","t":"Kleidung"},{"en":"cap","de":"die Kappe","e":"🧢","t":"Kleidung"},{"en":"jacket","de":"die Jacke","e":"🥼","t":"Kleidung"},{"en":"jeans","de":"die Jeans","e":"👖","t":"Kleidung"},{"en":"mittens","de":"die Handschuhe","e":"🧤","t":"Kleidung"},{"en":"pullover","de":"der Pullover","e":"","t":"Kleidung"},{"en":"shoes","de":"die Schuhe","e":"👞","t":"Kleidung"},{"en":"skirt","de":"der Rock","e":"","t":"Kleidung"},{"en":"socks","de":"die Socken","e":"🧦","t":"Kleidung"},{"en":"tights","de":"die Strumpfhose","e":"","t":"Kleidung"},{"en":"trainers","de":"die Turnschuhe","e":"👟","t":"Kleidung"},{"en":"T-shirt","de":"das T-Shirt","e":"👕","t":"Kleidung"},{"en":"woolly hat","de":"die Wollmütze","e":"","t":"Kleidung"},{"en":"black","de":"schwarz","e":"⚫","t":"Farben"},{"en":"blue","de":"blau","e":"🔵","t":"Farben"},{"en":"brown","de":"braun","e":"🟤","t":"Farben"},{"en":"colour","de":"die Farbe","e":"","t":"Farben"},{"en":"green","de":"grün","e":"🟢","t":"Farben"},{"en":"grey","de":"grau","e":"🩶","t":"Farben"},{"en":"orange","de":"orange","e":"🟠","t":"Farben"},{"en":"pink","de":"rosa","e":"🩷","t":"Farben"},{"en":"rainbow","de":"der Regenbogen","e":"","t":"Farben"},{"en":"red","de":"rot","e":"🔴","t":"Farben"},{"en":"white","de":"weiß","e":"⚪","t":"Farben"},{"en":"yellow","de":"gelb","e":"🟡","t":"Farben"},{"en":"Friday","de":"Freitag","e":"","t":"Wetter & Wochentage"},{"en":"Monday","de":"Montag","e":"","t":"Wetter & Wochentage"},{"en":"Saturday","de":"Samstag","e":"","t":"Wetter & Wochentage"},{"en":"Sunday","de":"Sonntag","e":"","t":"Wetter & Wochentage"},{"en":"Thursday","de":"Donnerstag","e":"","t":"Wetter & Wochentage"},{"en":"Tuesday","de":"Dienstag","e":"","t":"Wetter & Wochentage"},{"en":"Wednesday","de":"Mittwoch","e":"","t":"Wetter & Wochentage"},{"en":"aunt","de":"die Tante","e":"","t":"Familie"},{"en":"brother","de":"der Bruder","e":"👦","t":"Familie"},{"en":"dad","de":"Papa","e":"👨","t":"Familie"},{"en":"father","de":"der Vater","e":"","t":"Familie"},{"en":"grandfather","de":"der Großvater","e":"","t":"Familie"},{"en":"grandma","de":"Oma","e":"👵","t":"Familie"},{"en":"grandmother","de":"die Großmutter","e":"","t":"Familie"},{"en":"grandpa","de":"Opa","e":"👴","t":"Familie"},{"en":"mother","de":"die Mutter","e":"","t":"Familie"},{"en":"mum","de":"Mama","e":"👩","t":"Familie"},{"en":"sister","de":"die Schwester","e":"👧","t":"Familie"},{"en":"uncle","de":"der Onkel","e":"","t":"Familie"},{"en":"eight","de":"acht","e":"8️⃣","t":"Zahlen"},{"en":"five","de":"fünf","e":"5️⃣","t":"Zahlen"},{"en":"four","de":"vier","e":"4️⃣","t":"Zahlen"},{"en":"nine","de":"neun","e":"9️⃣","t":"Zahlen"},{"en":"numbers","de":"die Zahlen","e":"","t":"Zahlen"},{"en":"one","de":"eins","e":"1️⃣","t":"Zahlen"},{"en":"seven","de":"sieben","e":"7️⃣","t":"Zahlen"},{"en":"six","de":"sechs","e":"6️⃣","t":"Zahlen"},{"en":"ten","de":"zehn","e":"🔟","t":"Zahlen"},{"en":"three","de":"drei","e":"3️⃣","t":"Zahlen"},{"en":"two","de":"zwei","e":"2️⃣","t":"Zahlen"},{"en":"cold and hot","de":"kalt und warm","e":"","t":"Wörter & Wendungen"},{"en":"have got","de":"haben","e":"","t":"Wörter & Wendungen"},{"en":"how many","de":"wie viele","e":"","t":"Wörter & Wendungen"},{"en":"listen to","de":"höre zu","e":"","t":"Wörter & Wendungen"},{"en":"pull","de":"ziehen","e":"","t":"Wörter & Wendungen"},{"en":"what is it","de":"was ist es","e":"","t":"Wörter & Wendungen"},{"en":"book","de":"das Buch","e":"📖","t":"Schulsachen"},{"en":"chair","de":"der Stuhl","e":"🪑","t":"Schulsachen"},{"en":"chairs","de":"die Stühle","e":"","t":"Schulsachen"},{"en":"desk","de":"der Schreibtisch","e":"","t":"Schulsachen"},{"en":"glue stick","de":"der Klebestift","e":"","t":"Schulsachen"},{"en":"pen","de":"der Füller","e":"🖊️","t":"Schulsachen"},{"en":"pencil","de":"der Stift","e":"✏️","t":"Schulsachen"},{"en":"pencil case","de":"die Federmappe","e":"","t":"Schulsachen"},{"en":"rubber","de":"der Radiergummi","e":"","t":"Schulsachen"},{"en":"ruler","de":"das Lineal","e":"📏","t":"Schulsachen"},{"en":"school","de":"die Schule","e":"","t":"Schulsachen"},{"en":"schoolbag","de":"die Schultasche","e":"🎒","t":"Schulsachen"},{"en":"scissors","de":"die Schere","e":"✂️","t":"Schulsachen"},{"en":"autumn","de":"der Herbst","e":"🍂","t":"Wetter & Wochentage"},{"en":"cloud","de":"die Wolke","e":"☁️","t":"Wetter & Wochentage"},{"en":"fog","de":"der Nebel","e":"","t":"Wetter & Wochentage"},{"en":"rain","de":"der Regen","e":"🌧️","t":"Wetter & Wochentage"},{"en":"snow","de":"der Schnee","e":"❄️","t":"Wetter & Wochentage"},{"en":"spring","de":"der Frühling","e":"🌸","t":"Wetter & Wochentage"},{"en":"summer","de":"der Sommer","e":"🏖️","t":"Wetter & Wochentage"},{"en":"sun","de":"die Sonne","e":"☀️","t":"Wetter & Wochentage"},{"en":"weather","de":"das Wetter","e":"","t":"Wetter & Wochentage"},{"en":"wind","de":"der Wind","e":"💨","t":"Wetter & Wochentage"},{"en":"winter","de":"der Winter","e":"⛄","t":"Wetter & Wochentage"},{"en":"teeth","de":"die Zähne","e":"","t":"Körper"},{"en":"feet","de":"die Füße","e":"","t":"Körper"},{"en":"pens","de":"die Füller","e":"","t":"Schulsachen"},{"en":"books","de":"die Bücher","e":"","t":"Schulsachen"},{"en":"take off","de":"ausziehen","e":"","t":"Wörter & Wendungen"},{"en":"want to help","de":"Ich möchte helfen","e":"","t":"Wörter & Wendungen"},{"en":"who","de":"wer","e":"","t":"Wörter & Wendungen"},{"en":"where","de":"wo","e":"","t":"Wörter & Wendungen"},{"en":"hamster","de":"der Hamster","e":"🐹","t":"Haustiere"},{"en":"cat","de":"die Katze","e":"🐱","t":"Haustiere"},{"en":"spider","de":"die Spinne","e":"🕷️","t":"Haustiere"},{"en":"fish","de":"der Fisch","e":"🐟","t":"Haustiere"},{"en":"dog","de":"der Hund","e":"🐶","t":"Haustiere"},{"en":"guinea pig","de":"das Meerschweinchen","e":"🐹","t":"Haustiere"},{"en":"pony","de":"das Pony","e":"🐴","t":"Haustiere"},{"en":"rabbit","de":"das Kaninchen","e":"🐰","t":"Haustiere"},{"en":"tortoise","de":"die Schildkröte","e":"🐢","t":"Haustiere"},{"en":"mouse","de":"die Maus","e":"🐭","t":"Haustiere"},{"en":"budgie","de":"der Wellensittich","e":"🦜","t":"Haustiere"},{"en":"pets","de":"die Haustiere","e":"","t":"Haustiere"},{"en":"animals","de":"die Tiere","e":"","t":"Haustiere"},{"en":"can fly","de":"fliegen können","e":"","t":"Was Tiere können"},{"en":"can swim","de":"schwimmen können","e":"","t":"Was Tiere können"},{"en":"lay eggs","de":"Eier legen","e":"","t":"Was Tiere können"},{"en":"give milk","de":"Milch geben","e":"","t":"Was Tiere können"},{"en":"can climb trees","de":"auf Bäume klettern können","e":"","t":"Was Tiere können"},{"en":"eat grass","de":"Gras essen","e":"","t":"Was Tiere können"},{"en":"write","de":"schreiben","e":"","t":"Was Tiere können"},{"en":"read","de":"lesen","e":"","t":"Was Tiere können"},{"en":"find","de":"finden","e":"","t":"Was Tiere können"},{"en":"horse","de":"das Pferd","e":"🐴","t":"Auf dem Bauernhof"},{"en":"cow","de":"die Kuh","e":"🐄","t":"Auf dem Bauernhof"},{"en":"pig","de":"das Schwein","e":"🐖","t":"Auf dem Bauernhof"},{"en":"hen","de":"die Henne","e":"🐔","t":"Auf dem Bauernhof"},{"en":"sheep","de":"das Schaf","e":"🐑","t":"Auf dem Bauernhof"},{"en":"duck","de":"die Ente","e":"🦆","t":"Auf dem Bauernhof"},{"en":"bee","de":"die Biene","e":"🐝","t":"Auf dem Bauernhof"},{"en":"earthworm","de":"der Regenwurm","e":"🪱","t":"Auf dem Bauernhof"},{"en":"big","de":"groß","e":"","t":"Auf dem Bauernhof"},{"en":"small","de":"klein","e":"","t":"Auf dem Bauernhof"},{"en":"there is","de":"da ist / es gibt","e":"","t":"Auf dem Bauernhof"},{"en":"there are","de":"da sind / es gibt","e":"","t":"Auf dem Bauernhof"},{"en":"zoo","de":"der Zoo","e":"","t":"In der Stadt"},{"en":"hospital","de":"das Krankenhaus","e":"🏥","t":"In der Stadt"},{"en":"museum","de":"das Museum","e":"","t":"In der Stadt"},{"en":"cinema","de":"das Kino","e":"🎬","t":"In der Stadt"},{"en":"street","de":"die Straße","e":"","t":"In der Stadt"},{"en":"supermarket","de":"der Supermarkt","e":"🛒","t":"In der Stadt"},{"en":"library","de":"die Bibliothek","e":"📚","t":"In der Stadt"},{"en":"post office","de":"die Post","e":"📮","t":"In der Stadt"},{"en":"swimming pool","de":"das Schwimmbad","e":"🏊","t":"In der Stadt"},{"en":"sweet shop","de":"der Süßigkeitenladen","e":"🍬","t":"In der Stadt"},{"en":"restaurant","de":"das Restaurant","e":"🍽️","t":"In der Stadt"},{"en":"playground","de":"der Spielplatz","e":"","t":"In der Stadt"},{"en":"bus stop","de":"die Bushaltestelle","e":"🚏","t":"In der Stadt"},{"en":"train station","de":"der Bahnhof","e":"🚉","t":"In der Stadt"},{"en":"town","de":"die Stadt","e":"🏙️","t":"In der Stadt"},{"en":"turn right","de":"rechts abbiegen","e":"➡️","t":"In der Stadt"},{"en":"go straight on","de":"geradeaus gehen","e":"⬆️","t":"In der Stadt"},{"en":"turn left","de":"links abbiegen","e":"⬅️","t":"In der Stadt"},{"en":"across the bridge","de":"über die Brücke","e":"🌉","t":"In der Stadt"},{"en":"next to","de":"neben","e":"","t":"In der Stadt"},{"en":"opposite","de":"gegenüber","e":"","t":"In der Stadt"}]};
+var DAY=864e5;
+var STAGES=['','Entdecken','Lücken','Wortsalat','Tippen','Diktat','Buchstabieren','Meister','Gelernt'];
+var NEED={1:1,2:2,3:2,4:2,5:2,6:1,7:1};
+var STARS=[0,0,1,1,2,3,3,4,5];
+var STEP={2:0,3:0,4:1,5:1,6:2,7:2};
+var LB=[3,7,14,30,60];
+var ELIG=/^[A-Za-z][A-Za-z \-]*$/;
+var US={color:'colour',gray:'grey',favorite:'favourite',center:'centre',mom:'mum',math:'maths',theater:'theatre',neighbor:'neighbour',program:'programme',jewelry:'jewellery',pajamas:'pyjamas',flavor:'flavour',honor:'honour',behavior:'behaviour'};
+var TRAPTXT={silent:'Stumme Buchstaben (kn, wr, gh, mb …)',ieei:'ie oder ei',double:'Doppelbuchstaben',digraph:'Buchstabengruppen (th, sh, ch, ck …)',vowel:'Vokal-Paare (ee, ea, oo, ou …)',ending:'Wortendungen (-le, -tion, -ight)',other:'Sonstiges'};
+var TR=[
+  ['silent',/^kn|^wr|^gn|mb$|gh|alk|ould/],
+  ['ieei',/ie|ei/],
+  ['double',/([a-z])\1/],
+  ['digraph',/th|sh|ch|ck|ph|wh|ng/],
+  ['vowel',/ee|ea|oo|ou|ai|oa|ay|ow|oy|oi|ew/],
+  ['ending',/le$|tion$|ight/]
+];
+var LETTERNAME='ay bee see dee ee eff gee aitch eye jay kay ell em en oh pee queue are ess tee you vee double you ex why zed'.replace('double you','double-you').split(' ');
+var ALIAS={a:'a ay eh hey',b:'b be bee',c:'c see sea si',d:'d dee de',e:'e ee',f:'f eff ef',g:'g gee jee',h:'h aitch age ach',i:'i eye aye',j:'j jay',k:'k kay okay',l:'l el ell elle',m:'m em',n:'n en',o:'o oh owe',p:'p pee pea',q:'q queue cue',r:'r are ar',s:'s ess',t:'t tee tea',u:'u you ew',v:'v vee',w:'w',x:'x ex',y:'y why wy',z:'z zed zee'};
+var ALPHA={};Object.keys(ALIAS).forEach(function(l){ALIAS[l].split(' ').forEach(function(t){ALPHA[t]=l;});});
+var app=document.getElementById('app');
+
+/* ---------- Helfer ---------- */
+function h(tag,a){var e=document.createElement(tag);if(a)for(var k in a){var v=a[k];if(k==='class')e.className=v;else if(k==='html')e.innerHTML=v;else if(k.indexOf('on')===0)e.addEventListener(k.slice(2),v);else if(v===true)e.setAttribute(k,'');else if(v!==false&&v!=null)e.setAttribute(k,v);}
+  for(var i=2;i<arguments.length;i++)add(e,arguments[i]);return e;}
+function add(e,x){if(x==null||x===false)return;if(Array.isArray(x))x.forEach(function(y){add(e,y);});else e.append(x.nodeType?x:document.createTextNode(String(x)));}
+function mount(){app.replaceChildren();for(var i=0;i<arguments.length;i++)add(app,arguments[i]);window.scrollTo(0,0);}
+function lj(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v;}catch(e){return d;}}
+function sj(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function day0(t){var d=new Date(t);d.setHours(0,0,0,0);return d.getTime();}
+function todayStr(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+
+/* ---------- Wörter, Profile, Fortschritt ---------- */
+function loadWords(){
+  var seen={},out=[];
+  function addW(en,de,e,t){en=(en||'').trim();if(!ELIG.test(en))return;var k=en.toLowerCase();if(seen[k])return;seen[k]=1;out.push({en:en,de:de||'',e:e||'',t:t||'Weitere Wörter'});}
+  BASE.words.forEach(function(w){addW(w.en,w.de,w.e,w.t);});
+  var ex=lj('vt:extra',[]);if(Array.isArray(ex))ex.forEach(function(w){addW(w.en,w.de,w.e,w.t);});
+  return out;
+}
+var WORDS=loadWords();
+function topicList(){var l=BASE.topics.slice();WORDS.forEach(function(w){if(l.indexOf(w.t)<0)l.push(w.t);});return l;}
+var KIDS=[{id:'kid-ellena',name:'Ellena',color:'#8B6FC4',avatar:'profil-ellena'},{id:'kid-merle',name:'Merle',color:'#3D6BD6',avatar:'profil-merle'},{id:'kid-eltern',name:'Eltern',color:'#4A4750',role:'parent',avatar:'profil-eltern'}];
+try{localStorage.removeItem('vt:kids');}catch(e){}
+var kid=null;
+try{var cur=localStorage.getItem('vt:currentKid');KIDS.forEach(function(k){if(k.id===cur)kid=k;});}catch(e){}
+var P=null;
+function loadP(){P=normP(lj('vt:'+kid.id,null));}
+function saveP(){sj('vt:'+kid.id,P);schedulePush();}
+function starsOf(r){return r?STARS[Math.min(r.s,8)]:0;}
+function pctOf(r){if(!r)return 0;if(r.s>=8)return 100;return Math.min(99,Math.round(((r.s-1)+r.k/NEED[r.s])/7*100));}
+function starsEl(n){var e=h('span',{class:'stars',title:n+' von 5 Sternen'});for(var i=1;i<=5;i++)e.append(h('i',{class:i<=n?'on':''},i<=n?'★':'☆'));return e;}
+function barEl(p,cls){return h('div',{class:'pbar '+(cls||'')},h('i',{style:'width:'+p+'%'}));}
+function pic(name,cls){return h("img",{src:"bilder/"+name+".webp",class:"pic "+(cls||""),alt:"",onerror:function(){this.style.display="none";}});}
+function chestEl(p){var i=p>=95?4:p>=60?3:p>=30?2:p>=8?1:0;return h('img',{src:'bilder/schatztruhe-'+i+'.webp',class:'chest',alt:'',onerror:function(){this.style.display='none';}});}
+function band(pct){return pct>=95?5:pct>=80?4:pct>=65?3:pct>=50?2:pct>=30?1:0;}
+function topicDone(t){var ws=WORDS.filter(function(w){return w.t===t;});return ws.length>0&&ws.every(function(w){var r=P.w[w.en];return r&&r.s>=8;});}
+function checkDip(){var nd=[];if(!P.dip)P.dip={};topicList().forEach(function(t){if(!P.dip[t]&&topicDone(t)){P.dip[t]=todayStr();nd.push(t);}});if(nd.length)saveP();return nd;}
+function dipEl(nd){if(!nd||!nd.length)return null;return h("div",{class:"fb ok"},h("h2",{style:"margin-top:0"},"🎓 Neues Diplom!"),nd.map(function(t){return h("p",null,h("button",{class:"btn primary",onclick:function(){certificate(t,S&&S.test?testSummary:summary);}},"📜 "+t+" – Diplom ansehen"));}));}
+function wrapLines(g,text,max){var words=text.split(" "),lines=[],cur="";words.forEach(function(w){var t=cur?cur+" "+w:w;if(g.measureText(t).width>max&&cur){lines.push(cur);cur=w;}else cur=t;});if(cur)lines.push(cur);return lines;}
+function certVariant(t){var i=topicList().indexOf(t);return (i<0?0:i)%3+1;}
+var CERTLAY={1:{cy:700,k:0.95,w:1100,seal:[1415,850,215]},2:{cy:650,k:0.88,w:1000,seal:[1385,830,205]},3:{cy:690,k:0.72,w:1350,seal:[1480,850,195]}};
+function drawCert(cv,t,done){
+  var W=1754,H=1240,g=cv.getContext("2d"),d=new Date((P.dip&&P.dip[t])||Date.now()),n=WORDS.filter(function(w){return w.t===t;}).length,v=certVariant(t),L=CERTLAY[v];
+  cv.width=W;cv.height=H;
+  function paint(hasBg){
+    if(!hasBg){g.fillStyle="#FBF3DC";g.fillRect(0,0,W,H);g.strokeStyle="#B9955B";g.lineWidth=14;g.strokeRect(40,40,W-80,H-80);g.lineWidth=4;g.strokeRect(70,70,W-140,H-140);}
+    var F="\"Baloo 2\",\"Atkinson Hyperlegible\",system-ui,sans-serif",pw=L.w/L.k;
+    g.save();g.translate(W/2,L.cy);g.scale(L.k,L.k);g.textAlign="center";g.textBaseline="alphabetic";
+    function line(txt,y,size,col,wt){g.font=(wt||"700")+" "+size+"px "+F;g.fillStyle=col;g.fillText(txt,0,y);}
+    line("D I P L O M",-350,96,"#6B51A3","800");
+    line("Herzlichen Glückwunsch,",-250,58,"#3a2f1c","600");
+    var nm=kid.name+"!",ns=150;g.font="800 "+ns+"px "+F;while(g.measureText(nm).width>pw-80&&ns>60){ns-=8;g.font="800 "+ns+"px "+F;}
+    line(nm,-90,ns,"#2C51AC","800");
+    line("Du hast bei allen "+n+" Wörtern zum Thema",10,56,"#3a2f1c","600");
+    var tp="„"+t+"“",ts=104;g.font="800 "+ts+"px "+F;while(g.measureText(tp).width>pw-80&&ts>50){ts-=6;g.font="800 "+ts+"px "+F;}
+    line(tp,130,ts,"#6B51A3","800");
+    g.font="600 54px "+F;g.fillStyle="#3a2f1c";
+    var ls=wrapLines(g,"fünf Sterne erreicht und bist jetzt Vokabel-Profi für dieses Thema.",pw-120);
+    ls.forEach(function(l,i){g.fillText(l,0,220+i*68);});
+    line("Erreicht am "+d.toLocaleDateString("de-DE",{day:"numeric",month:"long",year:"numeric"}),340+(ls.length>1?50:0),56,"#3a2f1c","800");
+    g.restore();
+    var seal=new Image();seal.onload=function(){g.drawImage(seal,L.seal[0],L.seal[1],L.seal[2],L.seal[2]);if(done)done();};seal.onerror=function(){if(done)done();};seal.src="bilder/siegel.webp";
+  }
+  var img=new Image();
+  img.onload=function(){g.fillStyle="#fff";g.fillRect(0,0,W,H);g.drawImage(img,0,0,W,H);paint(true);};
+  img.onerror=function(){paint(false);};
+  img.src="bilder/diplom-"+v+".webp";
+}
+function pdfFromCanvas(cv){
+  var b64=cv.toDataURL("image/jpeg",0.92).split(",")[1],bin=atob(b64),len=bin.length,img=new Uint8Array(len),i,enc=new TextEncoder(),parts=[],offs=[],pos=0,NL="\n";
+  for(i=0;i<len;i++)img[i]=bin.charCodeAt(i);
+  function add(x){var u=typeof x==="string"?enc.encode(x):x;parts.push(u);pos+=u.length;}
+  function obj(k,body){offs[k]=pos;add(k+" 0 obj"+NL+body+NL+"endobj"+NL);}
+  add("%PDF-1.4"+NL);
+  obj(1,"<< /Type /Catalog /Pages 2 0 R >>");obj(2,"<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+  obj(3,"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>");
+  offs[4]=pos;add("4 0 obj"+NL+"<< /Type /XObject /Subtype /Image /Width "+cv.width+" /Height "+cv.height+" /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length "+len+" >>"+NL+"stream"+NL);add(img);add(NL+"endstream"+NL+"endobj"+NL);
+  var c="q 842 0 0 595 0 0 cm /Im0 Do Q";obj(5,"<< /Length "+c.length+" >>"+NL+"stream"+NL+c+NL+"endstream");
+  var xr=pos;add("xref"+NL+"0 6"+NL+"0000000000 65535 f "+NL);for(i=1;i<=5;i++)add(String(offs[i]).padStart(10,"0")+" 00000 n "+NL);
+  add("trailer"+NL+"<< /Size 6 /Root 1 0 R >>"+NL+"startxref"+NL+xr+NL+"%%EOF");
+  return new Blob(parts,{type:"application/pdf"});
+}
+function certificate(t,back){
+  var cv=h("canvas",{class:"certcv"}),msg=h("div",{class:"msg"});
+  mount(h("div",{class:"top"},h("h1",{style:"flex:1;margin:0"},"📜 Diplom"),h("button",{class:"btn small",onclick:function(){(back||wordsPage)();}},"Zurück")),
+    cv,h("div",{class:"row",style:"justify-content:center"},h("button",{class:"btn primary big",onclick:function(){
+      try{var url=URL.createObjectURL(pdfFromCanvas(cv)),a=h("a",{href:url,download:"Diplom-"+kid.name+"-"+t.replace(/[^A-Za-z0-9ÄÖÜäöüß]+/g,"-")+".pdf"});document.body.append(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},4000);msg.textContent="PDF gespeichert ✔ (im Ordner Downloads)";msg.className="msg ok";}
+      catch(e){msg.textContent="Das Speichern hat leider nicht geklappt.";msg.className="msg bad";}
+    }},"📄 Als PDF speichern")),msg);
+  drawCert(cv,t);
+}
+function rec(w){var r=P.w[w.en];if(!r){r={s:1,k:0,d:0,last:'',lb:0,ok:0,bad:0,t:0};P.w[w.en]=r;}return r;}
+function micOn(){return localStorage.getItem('vt:mic')==='1'&&!!SR;}
+
+/* ---------- Lernprotokoll & Wochenübersicht ---------- */
+function pad2(n){return String(n).padStart(2,"0");}
+function ymd(d){return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate());}
+function mondayOf(off){var d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7)+off*7);return d;}
+var wkOff=0;
+function dayLog(){if(!P.log)P.log={};var d=todayStr();return P.log[d]||(P.log[d]={s:0,n:0,ok:0,w:[],g:0,l:0,m:[]});}
+function logAns(w,ok,from,to){
+  var L=dayLog();L.n++;if(ok)L.ok++;if(L.w.indexOf(w.en)<0)L.w.push(w.en);
+  if(to>from)L.g+=to-from;if(to<from)L.l+=from-to;
+  if(to===5&&from<5&&L.m.indexOf(w.en)<0)L.m.push(w.en);
+}
+var lastAct=0,lastSave=0,sessSec=0,BREAK_S=1200;
+function activity(){
+  if(!kid||!P||kid.role==="parent")return;
+  var n=Date.now();
+  if(lastAct){var gap=(n-lastAct)/1000;dayLog().s+=Math.min(gap,60);if(gap>=300)sessSec=0;else sessSec+=Math.min(gap,60);if(n-lastSave>15000){saveP();lastSave=n;}}
+  lastAct=n;
+}
+document.addEventListener("pointerdown",activity,true);
+document.addEventListener("keydown",activity,true);
+document.addEventListener("visibilitychange",function(){lastAct=0;if(document.hidden&&P&&kid){saveP();flush();}});
+window.addEventListener("pagehide",function(){if(P&&kid){saveP();flush();}});
+function normP(p){p=p&&typeof p==="object"?p:{};p.w=p.w||{};p.err=p.err||{};p.log=p.log||{};p.dip=p.dip||{};return p;}
+function profileData(k){return normP(lj("vt:"+k.id,null));}
+var GOAL_S=1200,GOAL_DAYS=4;
+var STARNAME=["Noch nicht geübt","Entdeckt","Wortsalat","Tippen & Hören","Buchstabieren","Meister"];
+function weekStats(p,off){
+  var log=p.log||{},m=mondayOf(off),days=[],tot={s:0,n:0,ok:0,g:0,l:0},words={},masters=[],pts=0,gd=0,active=0,maxS=GOAL_S,i;
+  for(i=0;i<7;i++){
+    var d=new Date(m);d.setDate(m.getDate()+i);
+    var L=log[ymd(d)]||{s:0,n:0,ok:0,w:[],g:0,l:0,m:[]};
+    days.push({d:d,L:L});tot.s+=L.s;tot.n+=L.n;tot.ok+=L.ok;tot.g+=L.g;tot.l+=L.l;
+    (L.w||[]).forEach(function(x){words[x]=1;});(L.m||[]).forEach(function(x){if(masters.indexOf(x)<0)masters.push(x);});
+    pts+=Math.min(1,L.s/GOAL_S);if(L.s>=GOAL_S)gd++;if(L.n>0||L.s>=30)active++;if(L.s>maxS)maxS=L.s;
+  }
+  return {days:days,tot:tot,words:words,masters:masters,pts:pts,gd:gd,active:active,maxS:maxS};
+}
+/* Einschätzung ohne Zahlen für die Kinder; ein langer Tag ersetzt keinen anderen Tag (je Tag höchstens 1 Punkt) */
+function rating(pts,totalSec){
+  var min=totalSec/60;
+  if(pts>=4&&(pts>=5||min>=100))return {e:"🏆",t:"Überflieger! Du wirst eine echte Englischgranate!",l:6};
+  if(pts>=4)return {e:"🎉",t:"Wochenziel geschafft – das war richtig stark!",l:5};
+  if(pts>=3)return {e:"🚀",t:"Fast geschafft! Noch ein Übungstag und es ist perfekt.",l:4};
+  if(pts>=2)return {e:"🌟",t:"Richtig stark – du bist toll dabei!",l:3};
+  if(pts>=1)return {e:"🐰",t:"Du bist gut unterwegs!",l:2};
+  if(pts>=0.25)return {e:"🐣",t:"Ein Anfang ist gemacht. Weiter so!",l:1};
+  return {e:"🌱",t:"Diese Woche geht es gleich los – heute ist ein guter Tag zum Üben!",l:0};
+}
+function weekKidCard(){
+  var st=weekStats(P,0),r=rating(st.pts,st.tot.s),pc=Math.min(100,Math.round(100*st.pts/GOAL_DAYS));
+  return h("div",{class:"card"},
+    h("div",{class:"row",style:"align-items:center;margin:0;flex-wrap:nowrap"},h("div",{style:"font-size:42px;line-height:1"},r.e),h("div",null,h("b",null,"Deine Woche"),h("div",null,r.t))),
+    h("div",{class:"track"},h("i",{style:"width:"+pc+"%"}),h("span",{class:"rk",style:"left:"+Math.max(4,pc)+"%"},"🚀")));
+}
+function starRank(p){
+  var sc=[0,0,0,0,0,0],tot=WORDS.length||1;
+  WORDS.forEach(function(w){sc[starsOf(p.w[w.en])]++;});
+  return h("div",{class:"srank"},sc.map(function(c,i){
+    return h("div",{class:"sr"},
+      h("div",{class:"srt"},starsEl(i),h("small",{class:"soft"},STARNAME[i]),h("b",null,String(c))),
+      h("div",{class:"pbar"+(i===5?" gold":"")},h("i",{style:"width:"+Math.round(100*c/tot)+"%"})));
+  }));
+}
+function weekCard(k){
+  var p=profileData(k),st=weekStats(p,wkOff),tot=st.tot,days=st.days;
+  var five=0,sum=0;
+  WORDS.forEach(function(w){var r=p.w[w.en];sum+=pctOf(r);if(r&&r.s>=8)five++;});
+  var pct=Math.round(sum/Math.max(1,WORDS.length));
+  var shaky=Object.keys(st.words).filter(function(x){var r=p.w[x];return r&&starsOf(r)<=2&&r.bad>0;}).slice(0,10);
+  var e=Object.keys(p.err||{}).sort(function(a,b){return p.err[b]-p.err[a];})[0];
+  var mins=Math.round(tot.s/60),acc=tot.n?Math.round(100*tot.ok/tot.n):0,nw=Object.keys(st.words).length;
+  var names=["Mo","Di","Mi","Do","Fr","Sa","So"],r=rating(st.pts,tot.s);
+  var goalPx=Math.round(60*GOAL_S/st.maxS);
+  var over=days.filter(function(x){return x.L.s>GOAL_S;}).map(function(x){return names[days.indexOf(x)]+" "+Math.round(x.L.s/60)+" min";});
+  var bars=h("div",{class:"wbars"},h("div",{class:"goal",style:"bottom:"+(18+goalPx)+"px"},h("small",null,"20 Min")),days.map(function(x,ix){
+    var sec=x.L.s,mi=Math.round(sec/60),base=sec>0?Math.max(6,Math.round(60*Math.min(sec,GOAL_S)/st.maxS)):2,ex=sec>GOAL_S?Math.round(60*(sec-GOAL_S)/st.maxS):0;
+    return h("div",{class:"wb"},h("small",null,mi?mi+" min":"–"),
+      h("div",{class:"stack"},ex?h("i",{class:"xtra",style:"height:"+ex+"px"}):null,h("i",{style:"height:"+base+"px",class:sec>=GOAL_S?"ok":(sec>0||x.L.n>0?"on":"")})),
+      h("small",null,names[ix]));}));
+  return h("div",{class:"card"},
+    h("div",{class:"row",style:"align-items:center;margin:0 0 6px"},avatar(k),h("h2",{style:"margin:0;flex:1"},k.name),h("b",null,pct+" % gelernt")),
+    barEl(pct,"big"),h("p",{class:"soft",style:"margin:4px 0 8px"},five+" von "+WORDS.length+" Wörtern mit 5 Sternen"),
+    h("b",null,"⭐ Wörter nach Sternen"),starRank(p),
+    h("p",{style:"margin:14px 0 4px"},h("b",null,"🗓 Lernzeit: "+mins+" min"),", "+st.active+" von 7 Tagen"),
+    bars,
+    h("p",{class:"soft",style:"margin:0 0 6px"},"Ziel: "+GOAL_DAYS+" Tage mit je etwa 20 Minuten (das entspricht dem Doppelten des Alters, danach braucht der Kopf eine Pause). Die App schlägt nach rund 20 Minuten am Stück eine Pause vor. Jeder Tag zählt höchstens einmal, ein langer Tag ersetzt keinen anderen."),
+    over.length?h("p",{style:"margin:0 0 6px"},"💪 Mehr als 20 Minuten: ",h("b",null,over.join(", "))," – das zählt als Zusatz (gelber Teil im Balken), ersetzt aber keinen anderen Lerntag."):null,
+    h("p",null,r.e+" ",h("b",null,st.gd+" von "+GOAL_DAYS+" Zieltagen"),(wkOff===0?" bisher: ":": "),r.t),
+    tot.n||tot.s>=30?h("div",null,
+      h("div",{class:"stats"},h("div",null,h("b",null,String(nw)),"Wörter geübt"),h("div",null,h("b",null,String(tot.n)),"Antworten"),h("div",null,h("b",null,acc+" %"),"richtig"),h("div",null,h("b",null,"+"+tot.g),"Sterne")),
+      tot.l?h("p",{class:"soft",style:"margin:6px 0 0"},"(−"+tot.l+" Sterne bei Fehlern)"):null,
+      st.masters.length?h("p",null,"🏆 Neu auf 5 Sternen: ",h("b",null,st.masters.join(", "))):null,
+      shaky.length?h("p",null,"🧩 Wackeln noch: ",shaky.join(", ")):null,
+      e?h("p",{class:"soft"},"Häufigster Stolperer: "+TRAPTXT[e]):null)
+    :h("p",{class:"soft"},"In dieser Woche wurde noch nicht geübt."));
+}
+function weekBlock(re){
+  re=re||settings;
+  var m=mondayOf(wkOff),e=new Date(m);e.setDate(m.getDate()+6);
+  var lab=m.toLocaleDateString("de-DE",{day:"numeric",month:"short"})+" – "+e.toLocaleDateString("de-DE",{day:"numeric",month:"short",year:"numeric"});
+  var kids=KIDS.filter(function(k){return k.role!=="parent";});
+  return h("div",null,
+    h("div",{class:"row",style:"align-items:center;justify-content:space-between;flex-wrap:nowrap"},
+      h("button",{class:"btn small",onclick:function(){wkOff--;re(true);}},"◀"),
+      h("b",null,wkOff===0?"Diese Woche · "+lab:lab),
+      h("button",{class:"btn small",disabled:wkOff>=0,onclick:function(){wkOff++;re(true);}},"▶")),
+    kids.map(weekCard));
+}
+
+/* ---------- Profile (feste Familie: Ellena, Merle, Eltern) ---------- */
+var busy=false,view="",dirty=false,pt=null;
+function avImg(name,cls){
+  var i=h("img",{src:"bilder/"+name+".webp",class:"avatar "+(cls||""),alt:""});
+  i.onerror=function(){var s=h("span",{class:"avatar ph "+(cls||"")},"🐰");if(i.parentNode)i.replaceWith(s);};
+  return i;
+}
+function avatar(k,cls){return avImg(k.avatar||("profil-"+(k.id||"").replace("kid-","")),(cls||"")+(k.role==="parent"?" wide":""));}
+
+/* ---------- Familie & Abgleich (Firebase Firestore, per REST) ---------- */
+var FB={project:"vokabeln-ca1d7",key:"AIzaSyBaTPUOPWeMjD0K3FXxBPJsF3Z047VDl8I"};
+function fam(){try{return localStorage.getItem("vt:fam")||"";}catch(e){return "";}}
+function fsBase(){return "https://firestore.googleapis.com/v1/projects/"+FB.project+"/databases/(default)/documents/families/"+fam()+"/profiles";}
+function setSync(ok,msg){try{if(ok){localStorage.setItem("vt:syncAt",String(Date.now()));localStorage.removeItem("vt:syncErr");}else localStorage.setItem("vt:syncErr",msg||"Fehler");}catch(e){}}
+function mergeP(a,b){
+  if(!a)return normP(b);if(!b)return normP(a);
+  a=normP(a);b=normP(b);
+  var o={w:{},err:{},log:{},dip:{}};
+  function keys(x,y){var s={};Object.keys(x||{}).concat(Object.keys(y||{})).forEach(function(k){s[k]=1;});return Object.keys(s);}
+  keys(a.w,b.w).forEach(function(x){var ra=(a.w||{})[x],rb=(b.w||{})[x];o.w[x]=!ra?rb:!rb?ra:((rb.t||0)>(ra.t||0)?rb:ra);});
+  keys(a.log,b.log).forEach(function(x){var la=(a.log||{})[x],lb=(b.log||{})[x];o.log[x]=!la?lb:!lb?la:(((lb.n||0)>(la.n||0))||((lb.n||0)===(la.n||0)&&(lb.s||0)>(la.s||0))?lb:la);});
+  keys(a.err,b.err).forEach(function(x){o.err[x]=Math.max((a.err||{})[x]||0,(b.err||{})[x]||0);});
+  keys(a.dip,b.dip).forEach(function(x){var da=(a.dip||{})[x],db=(b.dip||{})[x];o.dip[x]=!da?db:!db?da:(da<db?da:db);});
+  return o;
+}
+function pushProfile(k,keep){
+  if(!fam())return Promise.resolve(false);
+  var body=JSON.stringify({fields:{name:{stringValue:k.name},role:{stringValue:k.role||"kid"},avatar:{stringValue:k.avatar||""},p:{stringValue:JSON.stringify(profileData(k))},u:{integerValue:String(k.u||0)}}});
+  return fetch(fsBase()+"/"+k.id+"?key="+FB.key,{method:"PATCH",headers:{"Content-Type":"application/json"},body:body,keepalive:!!keep&&body.length<60000})
+    .then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);setSync(true);return true;})
+    .catch(function(e){setSync(false,e.message);return false;});
+}
+function schedulePush(){
+  dirty=true;
+  if(!fam()||!kid||kid.role==="parent"||pt)return;
+  pt=setTimeout(function(){pt=null;if(dirty&&kid&&kid.role!=="parent"){dirty=false;pushProfile(kid);}},20000);
+}
+function flush(){if(dirty&&fam()&&kid&&kid.role!=="parent"){dirty=false;pushProfile(kid,true);}}
+function pullAll(){
+  if(!fam())return Promise.resolve(false);
+  return fetch(fsBase()+"?pageSize=100&key="+FB.key).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json();}).then(function(j){
+    var remote={},changed=false,pushes=[];
+    (j.documents||[]).forEach(function(d){var id=d.name.split("/").pop(),f=d.fields||{};remote[id]=(f.p||{}).stringValue||"";});
+    KIDS.forEach(function(k){
+      var rs=remote[k.id];
+      if(rs===undefined){pushes.push(k);return;}
+      var rp=null;try{rp=JSON.parse(rs);}catch(e){}
+      var lp=lj("vt:"+k.id,null),mp=mergeP(lp,rp);
+      if(JSON.stringify(mp)!==JSON.stringify(lp)){sj("vt:"+k.id,mp);changed=true;if(kid&&kid.id===k.id&&!busy)P=mp;}
+      if(JSON.stringify(mp)!==JSON.stringify(normP(rp)))pushes.push(k);
+    });
+    return Promise.all(pushes.map(function(k){return pushProfile(k);})).then(function(){setSync(true);return changed;});
+  }).catch(function(e){setSync(false,e.message);return false;});
+}
+function initSync(){
+  if(!fam())return;
+  pullAll().then(function(ch){if(!ch||busy)return;
+    if(view==="select")selectKid();else if(view==="home"){if(kid)home();else selectKid();}});
+}
+window.addEventListener("online",function(){pullAll();});
+function genCode(){var a="abcdefghijkmnpqrstuvwxyz23456789",b=new Uint8Array(24),s="",i;crypto.getRandomValues(b);for(i=0;i<24;i++)s+=a[b[i]%a.length];return s;}
+function parseCode(t){var m=(t||"").trim().match(/([a-z0-9]{20,})$/i);return m?m[1].toLowerCase():"";}
+function setFam(c){try{localStorage.setItem("vt:fam",c);}catch(e){}pullAll().then(function(){if(view==="select")selectKid();else settings(true);});}
+function copyText(t,el){
+  function fallback(){prompt("Zum Kopieren:",t);}
+  try{navigator.clipboard.writeText(t).then(function(){el.textContent="Kopiert ✔";el.className="msg ok";},fallback);}catch(e){fallback();}
+}
+function familyCard(){
+  var msg=h("div",{class:"msg"}),code=fam();
+  if(!code){
+    var inp=h("input",{class:"plain",type:"text",placeholder:"Familiencode oder Link einfügen",autocapitalize:"off",spellcheck:"false"});
+    return h("div",{class:"card"},h("h2",{style:"margin-top:0"},"👨‍👩‍👧 Familie & Geräte"),
+      h("p",null,"Verbinde die Geräte, damit du hier den Fortschritt aller Kinder siehst. Gespeichert werden nur Profilname, Häschen und Lernstand (Server in Berlin)."),
+      h("button",{class:"btn primary",onclick:function(){setFam(genCode());}},"Neue Familie anlegen"),
+      h("p",{class:"soft",style:"margin:12px 0 4px"},"Oder dieses Gerät mit einer bestehenden Familie verbinden:"),
+      h("div",{class:"row"},inp,h("button",{class:"btn",onclick:function(){var c=parseCode(inp.value);if(!c){msg.textContent="Das sieht nicht wie ein Familiencode aus.";msg.className="msg bad";return;}setFam(c);}},"Verbinden")),msg);
+  }
+  var at=+(localStorage.getItem("vt:syncAt")||0),err=localStorage.getItem("vt:syncErr");
+  return h("div",{class:"card"},h("h2",{style:"margin-top:0"},"👨‍👩‍👧 Familie & Geräte"),
+    h("p",null,err?"⚠️ Abgleich fehlgeschlagen ("+err+")":at?"✓ Verbunden · zuletzt abgeglichen "+new Date(at).toLocaleString("de-DE",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"Verbunden"),
+    h("div",{class:"row"},
+      h("button",{class:"btn",onclick:function(){msg.textContent="Gleiche ab …";pullAll().then(function(){settings(true);});}},"🔄 Jetzt abgleichen"),
+      h("button",{class:"btn primary",onclick:function(){copyText(location.origin+location.pathname+"#fam="+code,msg);}},"📋 Link für andere Geräte kopieren")),
+    h("p",{class:"soft",style:"margin:6px 0"},"Öffnet ein Kind diesen Link einmal auf seinem Gerät, ist es mit der Familie verbunden. Bitte nicht weitergeben, wer den Link hat, kann den Lernstand sehen."),
+    h("p",{class:"soft",style:"margin:6px 0;word-break:break-all"},"Familiencode: "+code),msg,
+    h("button",{class:"btn small",onclick:function(){if(confirm("Dieses Gerät von der Familie trennen? Der Lernstand bleibt auf dem Gerät, wird aber nicht mehr abgeglichen.")){try{localStorage.removeItem("vt:fam");}catch(e){}settings(true);}}},"Verbindung trennen"));
+}
+function connectScreen(){
+  var inp=h("input",{class:"plain",type:"text",placeholder:"Familiencode oder Link einfügen",autocapitalize:"off",spellcheck:"false"}),msg=h("div",{class:"msg"});
+  mount(h("div",{class:"top"},h("h1",{style:"flex:1;margin:0"},"🔗 Mit Familie verbinden"),h("button",{class:"btn small",onclick:selectKid},"Zurück")),
+    h("p",null,"Frag deine Eltern nach dem Familien-Link oder dem Code."),h("div",{class:"row"},inp,h("button",{class:"btn primary",onclick:function(){var c=parseCode(inp.value);if(!c){msg.textContent="Das sieht nicht wie ein Familiencode aus.";msg.className="msg bad";return;}setFam(c);}},"Verbinden")),msg);
+}
+
+/* ---------- Stolperstellen ---------- */
+function traps(en){
+  var low=en.toLowerCase(),res=[],off=0;
+  low.split(' ').forEach(function(wd){
+    var taken=[];
+    TR.forEach(function(t){var re=new RegExp(t[1].source,'g'),m;
+      while((m=re.exec(wd))){var a=m.index,b=a+m[0].length;if(b===a){re.lastIndex++;continue;}
+        var free=true;for(var i=a;i<b;i++)if(taken[i])free=false;
+        if(free){for(var j=a;j<b;j++)taken[j]=true;res.push({a:a+off,b:b+off,type:t[0]});}}});
+    off+=wd.length+1;});
+  return res.sort(function(x,y){return x.a-y.a;});
+}
+function wordEl(en,cls){
+  var tr=traps(en),el=h('div',{class:'word '+(cls||'')}),i=0;
+  tr.forEach(function(t){if(t.a>i)el.append(en.slice(i,t.a));el.append(h('span',{class:'trap'},en.slice(t.a,t.b)));i=t.b;});
+  if(i<en.length)el.append(en.slice(i));return el;
+}
+function errType(en,typed){
+  var a=en.toLowerCase(),b=typed.trim().toLowerCase(),i=0;
+  while(i<a.length&&i<b.length&&a[i]===b[i])i++;
+  var t=traps(en),r='other';
+  t.forEach(function(x){if(i>=x.a-1&&i<x.b&&r==='other')r=x.type;});
+  return r;
+}
+function judge(w,typed){
+  var t=typed.trim().replace(/\s+/g,' '),target=w.en;
+  var same=/[A-Z]/.test(target)?t===target:t.toLowerCase()===target.toLowerCase();
+  if(same)return 'ok';
+  if(US[t.toLowerCase()]&&US[t.toLowerCase()]===target.toLowerCase())return 'uk';
+  return 'bad';
+}
+
+/* ---------- Sprache ---------- */
+var VOICE=null,noVoice=false;
+function pickVoice(){
+  if(!('speechSynthesis' in window))return;
+  var vs=speechSynthesis.getVoices();if(!vs.length)return;
+  function n(v){return (v.lang||'').replace('_','-').toLowerCase();}
+  VOICE=vs.filter(function(v){return n(v)==='en-gb'&&/natural|online|google|sonia|libby|serena|daniel|kate|hazel/i.test(v.name);})[0]||vs.filter(function(v){return n(v)==='en-gb';})[0]||vs.filter(function(v){return n(v).indexOf('en')===0;})[0]||null;
+  noVoice=!VOICE||n(VOICE)!=='en-gb';
+}
+if('speechSynthesis' in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice;}
+var cur=null;
+function slug(t){return t.toLowerCase().replace(/[^a-z]+/g,"-").replace(/^-|-$/g,"");}
+function toast(msg){
+  var t=document.getElementById("toast");
+  if(!t){t=h("div",{id:"toast",class:"note",style:"position:fixed;left:16px;right:16px;bottom:16px;z-index:9;text-align:center"});document.body.append(t);}
+  t.textContent=msg;t.style.display="block";clearTimeout(t.__t);t.__t=setTimeout(function(){t.style.display="none";},6000);
+}
+function speak(text,slow,onend){
+  if(!("speechSynthesis" in window)||!VOICE||(VOICE.lang||"").toLowerCase().indexOf("en")!==0){
+    toast("Die Sprachdatei konnte nicht geladen werden. Bitte die App über ihre Internetadresse öffnen, nicht als Datei.");
+    if(onend)onend();return;}
+  speechSynthesis.cancel();
+  var u=new SpeechSynthesisUtterance(text);u.lang="en-GB";if(VOICE)u.voice=VOICE;u.rate=slow?0.5:0.9;
+  u.onend=u.onerror=function(){if(onend)onend();};
+  speechSynthesis.speak(u);
+}
+function say(text,slow,file,onend){
+  try{if(cur){cur.pause();if(cur.__end)cur.__end();cur=null;}}catch(e){}
+  if("speechSynthesis" in window)speechSynthesis.cancel();
+  var done=false;function fin(){if(!done){done=true;if(onend)onend();}}
+  function fb(){if(!done){speak(text,slow,fin);}}
+  try{
+    var path=(slow&&!file?"audio/slow/":"audio/")+(file||slug(text))+".mp3";
+    var a=new Audio(path);cur=a;a.__end=fin;
+    a.onended=fin;a.onerror=fb;
+    var p=a.play();if(p&&p.catch)p.catch(fb);
+  }catch(e){fb();}
+}
+function speakBtns(w){
+  var b1=h("button",{class:"btn blue"},"🔊 Anhören"),b2=h("button",{class:"btn"},"🐢 Langsam");
+  function wire(btn,slow,label){
+    btn.addEventListener("click",function(){
+      b1.classList.remove("playing");b2.classList.remove("playing");
+      b1.textContent="🔊 Anhören";b2.textContent="🐢 Langsam";
+      btn.classList.add("playing");btn.textContent="▶ spielt …";
+      say(w.en,slow,null,function(){btn.classList.remove("playing");btn.textContent=label;});
+    });
+  }
+  wire(b1,false,"🔊 Anhören");wire(b2,true,"🐢 Langsam");
+  return h("div",{class:"row",style:"justify-content:center"},b1,b2);
+}
+
+/* ---------- Sitzung ---------- */
+var S=null;
+function buildQueue(topic){
+  var now=Date.now(),pool=WORDS.filter(function(w){return !topic||w.t===topic;});
+  var due=pool.filter(function(w){var r=P.w[w.en];return r&&r.d<=now;}).sort(function(a,b){return P.w[a.en].d-P.w[b.en].d;}).slice(0,10);
+  var fresh=shuffle(pool.filter(function(w){return !P.w[w.en];}));
+  var nNew=Math.max(3,Math.min(5,15-due.length));
+  return shuffle(due.concat(fresh.slice(0,nNew)));
+}
+function startSession(topic,words){
+  busy=true;
+  var q=words?shuffle(words).slice(0,15):buildQueue(topic);
+  if(!q.length){mount(h('div',{class:'card center'},pic('kaninchen-schlaeft'),h('h2',null,'Alles erledigt! 🎉'),h('p',null,'Gerade ist nichts zu üben. Komm morgen wieder – dann sind neue Wörter dran.'),h('button',{class:'btn primary',onclick:home},'Zurück')));return;}
+  S={topic:topic,words:words||null,queue:q.map(function(w){return {w:w,turn:1};}),total:q.length,done:0,ok:0,bad:0,promoted:[],stars:{},errs:{}};
+  next();
+}
+function frame(stage,body){
+  var pct=Math.round(100*S.done/Math.max(1,S.done+S.queue.length+1));
+  return h('div',null,h('div',{class:'top'},
+    h('span',{class:'badge'},stage),
+    h('div',{class:'bar'},h('i',{style:'width:'+pct+'%'})),
+    h('button',{class:'btn small',onclick:function(){if(confirm('Übung beenden?'))summary();}},'✕')),body);
+}
+function startTest(pool,count){
+  busy=true;
+  var q=shuffle(pool).slice(0,count||pool.length);
+  S={test:true,pool:pool,queue:q.map(function(w){return {w:w,turn:1};}),total:q.length,done:0,ok:0,bad:0,promoted:[],stars:{},errs:{},log:[]};
+  next();
+}
+function afterTest(it,res){
+  var r=rec(it.w),before=starsOf(r),ok=res.ok&&!res.helped;r.t=Date.now();
+  S.done++;S.log.push({w:it.w,ok:ok});
+  if(ok){S.ok++;r.ok++;}
+  else{S.bad++;r.bad++;var ty=errType(it.w.en,res.typed||"");P.err[ty]=(P.err[ty]||0)+1;S.errs[ty]=(S.errs[ty]||0)+1;
+    r.s=r.s>=8?5:Math.max(1,r.s-1);r.k=0;r.d=Date.now();}
+  track(it.w,before,starsOf(r));logAns(it.w,ok,before,starsOf(r));saveP();
+  if(ok)next();else showAnswer(it.w,res.typed||"",next);
+}
+function showAnswer(w,typed,cont){
+  say(w.en,false);
+  mount(frame("Test",h("div",null,h("div",{class:"fb bad"},h("div",null,"Richtig geschrieben:"),wordEl(w.en),typed?h("p",{class:"soft"},"Du hast geschrieben: "+typed):h("p",{class:"soft"},"Hilfe benutzt")),
+    speakBtns(w),h("button",{class:"btn primary big",onclick:cont},"Weiter →"))));
+}
+function testSummary(){
+  var nd=checkDip(),tot=S.ok+S.bad,pct=tot?Math.round(100*S.ok/tot):0;
+  var wrong=S.log.filter(function(x){return !x.ok;}).map(function(x){return x.w;});
+  var msg=pct>=90?"Wow, richtig fit! 🏆":pct>=70?"Ziemlich gut! 👍":pct>=50?"Da geht noch was – üben lohnt sich!":"Zeit zum Wiederholen – du schaffst das! 💪";
+  mount(h("div",{class:"card center"},h("h1",null,"Testergebnis"),h("div",{class:"big-emoji"},pct+" %"),pic("ergebnis-"+band(pct)),h("p",null,S.ok+" von "+tot+" Wörtern richtig"),dipEl(nd),h("p",null,msg),barEl(pct,"big"),
+    wrong.length?h("div",null,h("h2",null,"Diese Wörter üben wir nochmal"),wrong.map(function(w){return h("div",{class:"wl",style:"grid-template-columns:1fr auto"},h("span",null,w.en+"  ",h("span",{class:"soft"},w.de)),starsEl(starsOf(P.w[w.en])));})):h("p",null,"Alle richtig – kein Wort vergessen! 🎉"),
+    h("div",{class:"row"},wrong.length?h("button",{class:"btn primary",onclick:function(){startSession(null,wrong);}},"Falsche Wörter üben"):null,h("button",{class:"btn",onclick:function(){startTest(S.pool,S.total);}},"Nochmal testen"),h("button",{class:"btn",onclick:home},"Fertig"))));
+}
+function testSetup(pool,label){
+  if(!pool.length){mount(h("div",{class:"card center"},h("h2",null,"Noch keine Wörter zum Testen"),h("p",null,"Übe erst ein paar Wörter, dann kann der Test sie abfragen."),h("button",{class:"btn primary",onclick:home},"Zurück")));return;}
+  var opts=[10,20,30].filter(function(n){return n<pool.length;});opts.push(pool.length);
+  mount(h("div",{class:"top"},h("h1",{style:"flex:1;margin:0"},"📝 Gemischter Test"),h("button",{class:"btn small",onclick:home},"Zurück")),
+    h("div",{class:"card"},pic("kaninchen-test","small"),h("p",null,label),h("p",{class:"soft"},"Du bekommst bunt gemischte Wörter, mal nur das deutsche Wort, mal nur zum Hören – ohne Hilfe. So sieht man, was wirklich sitzt. Falsche Wörter verlieren Sterne, damit sie bald wiederkommen."),
+      h("h2",null,"Wie viele Wörter?"),h("div",{class:"row"},opts.map(function(n){return h("button",{class:"btn primary",onclick:function(){startTest(pool,n);}},n===pool.length&&opts.length>1?"Alle ("+n+")":String(n));}))));
+}
+var BREAK_WAIT_MS=300000;
+function showBreak(){
+  var end=Date.now()+BREAK_WAIT_MS,timer=null;
+  var left=h("div",{style:"font-size:46px;font-weight:800;margin:6px 0"},"5:00");
+  var go=h("button",{class:"btn primary",disabled:true,onclick:function(){clearInterval(timer);sessSec=0;next();}},"Weiter üben");
+  function tick(){
+    var ms=Math.max(0,end-Date.now()),m=Math.floor(ms/60000),sec=Math.floor(ms%60000/1000);
+    left.textContent=m+":"+String(sec).padStart(2,"0");
+    if(ms<=0){clearInterval(timer);go.disabled=false;left.textContent="Weiter geht’s! 🎉";}
+  }
+  timer=setInterval(tick,1000);
+  mount(h("div",{class:"card center"},pic("kaninchen-schlaeft"),h("h2",null,"Zeit für eine kleine Pause! 🌿"),
+    h("p",null,"Du hast richtig lange konzentriert geübt – das war stark. Steh kurz auf, trink einen Schluck und beweg dich ein bisschen. Danach geht es mit frischem Kopf weiter."),
+    left,
+    h("div",{class:"row",style:"justify-content:center"},go,h("button",{class:"btn",onclick:function(){clearInterval(timer);sessSec=0;summary();}},"Für heute Schluss"))));
+}
+function next(){
+  if(!S.queue.length){summary();return;}
+  if(sessSec>=BREAK_S){showBreak();return;}
+  if(S.test){var itT=S.queue.shift(),fT=function(res){afterTest(itT,res);};if(Math.random()<0.65)exMeister(itT.w,fT);else exTyped(itT.w,5,fT);return;}
+  var it=S.queue.shift(),r=rec(it.w),stage=r.s;
+  if(stage>=8)stage=[5,6,7][Math.floor(Math.random()*3)];
+  var fin=function(res){after(it,stage,res);};
+  var ex=[null,exLook,exGaps,exScramble,function(w,f){exTyped(w,4,f);},function(w,f){exTyped(w,5,f);},exSpell,exMeister][stage];
+  ex(it.w,fin,stage);
+}
+function requeue(it,gap){var pos=Math.min(S.queue.length,gap);S.queue.splice(pos,0,it);}
+function after(it,stage,res){
+  var r=rec(it.w),now=Date.now(),t0=day0(now);r.t=now;
+  S.done++;
+  var before=starsOf(r);
+  if(res.ok){
+    S.ok++;r.ok++;
+    if(res.helped){r.d=t0+DAY;}
+    else if(r.s>=8){r.lb=Math.min(r.lb+1,LB.length-1);r.d=t0+LB[r.lb]*DAY;}
+    else{
+      var gated=r.s>=4&&r.s<=7,dayOK=!gated||r.last!==todayStr();
+      if(dayOK){r.k++;r.last=todayStr();}
+      if(r.k>=NEED[r.s]){r.s++;r.k=0;S.promoted.push(it.w.en);r.d=r.s===8?t0+LB[0]*DAY:t0+STEP[r.s]*DAY;if(r.s===8)r.lb=0;}
+      else r.d=gated?t0+DAY:now;
+    }
+    if(it.turn===1&&r.s<=3&&!res.helped)requeue({w:it.w,turn:2},4);
+    track(it.w,before,starsOf(r));logAns(it.w,true,before,starsOf(r));
+    saveP();next();
+  }else{
+    S.bad++;r.bad++;
+    var ty=errType(it.w.en,res.typed||'');P.err[ty]=(P.err[ty]||0)+1;S.errs[ty]=(S.errs[ty]||0)+1;
+    r.s=r.s>=8?5:Math.max(1,r.s-1);r.k=0;r.d=now;
+    track(it.w,before,starsOf(r));logAns(it.w,false,before,starsOf(r));
+    saveP();
+    correction(it.w,res.typed||'',function(){requeue({w:it.w,turn:2},3);next();});
+  }
+}
+function track(w,from,to){var t=S.stars[w.en];if(!t)S.stars[w.en]={w:w,from:from,to:to};else t.to=to;}
+function correction(w,typed,cont){
+  var diff=h('div',{class:'diff center'}),t=typed.trim();
+  for(var i=0;i<t.length;i++)diff.append(h('span',{class:(t[i].toLowerCase()===(w.en[i]||'').toLowerCase())?'g':'x'},t[i]));
+  var msg=h('div',{class:'msg'});
+  var tb=typeBox(function(v,inp){
+    if(judge(w,v)==='ok'){cont();}
+    else{msg.textContent='Fast – schau nochmal genau hin.';msg.className='msg bad';inp.classList.add('shake');setTimeout(function(){inp.classList.remove('shake');},400);}
+  });
+  say(w.en,true);
+  var tr=traps(w.en)[0];
+  mount(frame('Fast!',h('div',null,pic('kaninchen-troestet','small'),
+    h('div',{class:'fb bad'},h('div',null,'So schreibt man es:'),wordEl(w.en),
+      t?h('div',null,h('div',{class:'soft'},'Du hast geschrieben:'),diff):null,
+      tr?h('p',{class:'soft'},'Achtung: '+TRAPTXT[tr.type]):null),
+    speakBtns(w),h('p',{class:'center'},'Schreib das Wort jetzt einmal richtig ab:'),tb.row,msg)));
+  tb.inp.focus();
+}
+function summary(){
+  if(S.test){testSummary();return;}
+  var nd=checkDip();
+  var tot=S.ok+S.bad,ratio=tot?S.ok/tot:0,stars=ratio>=0.9?3:ratio>=0.7?2:1;
+  var errs=Object.keys(S.errs).sort(function(a,b){return S.errs[b]-S.errs[a];});
+  mount(h('div',{class:'card center'},h('h1',null,'Geschafft! '+'⭐'.repeat(stars)),pic('ergebnis-'+band(Math.round(ratio*100))),
+    h('p',null,S.ok+' von '+tot+' richtig'),dipEl(nd),
+    Object.keys(S.stars).length?h('div',null,h('h2',null,'Deine Sterne'),Object.keys(S.stars).map(function(k){var t=S.stars[k];return h('div',{class:'wl',style:'grid-template-columns:1fr auto'},h('span',null,t.w.en),h('span',null,starsEl(t.to),t.to>t.from?' ⬆':(t.to<t.from?' ⬇':'')));})):null,
+    errs.length?h('div',null,h('h2',null,'Hier üben wir weiter'),errs.map(function(e){return h('p',null,TRAPTXT[e]+' ('+S.errs[e]+'×)');})):h('p',null,'Fehlerfrei – super!'),
+    h('div',{class:'row'},h('button',{class:'btn primary',onclick:function(){startSession(S.topic||null,S.words||null);}},'Noch eine Runde'),h('button',{class:'btn',onclick:home},'Fertig'))));
+}
+
+/* ---------- Eingabe-Bausteine ---------- */
+function typeBox(onSubmit){
+  var inp=h('input',{class:'tin',type:'text',autocapitalize:'off',autocorrect:'off',autocomplete:'off',spellcheck:'false',enterkeyhint:'done','aria-label':'Englisches Wort'});
+  function go(){if(inp.value.trim())onSubmit(inp.value,inp);}
+  inp.addEventListener('keydown',function(e){if(e.key==='Enter')go();});
+  return {inp:inp,row:h('div',{class:'row'},inp,h('button',{class:'btn primary',onclick:go},'Prüfen'))};
+}
+function shake(el){el.classList.add('shake');setTimeout(function(){el.classList.remove('shake');},400);}
+
+/* Stufe 1: Entdecken (Look – Say – Cover – Write – Check) */
+function exLook(w,fin){
+  say(w.en,false);
+  function look(){
+    mount(frame('1 · Entdecken',h('div',null,
+      h('div',{class:'prompt'},h('div',{class:'big-emoji'},w.e||'💬'),h('div',{class:'de'},w.de)),
+      pic('kaninchen-denkt','small'),wordEl(w.en),speakBtns(w),
+      h('p',{class:'center soft'},'Schau genau hin – besonders auf die gelbe Stelle! Sprich das Wort laut mit.'),
+      h('button',{class:'btn primary big',onclick:cover},'Verdecken & aufschreiben ✏️'))));
+  }
+  function cover(){
+    var msg=h('div',{class:'msg'});
+    var tb=typeBox(function(v,inp){
+      var r=judge(w,v);
+      if(r==='ok')fin({ok:true,typed:v});
+      else if(r==='uk'){msg.textContent='Fast! Im britischen Englisch schreibt man: '+w.en;msg.className='msg bad';shake(inp);}
+      else fin({ok:false,typed:v});
+    });
+    mount(frame('1 · Entdecken',h('div',null,
+      h('div',{class:'prompt'},h('div',{class:'big-emoji'},w.e||'💬'),h('div',{class:'de'},w.de),h('div',{class:'word'},'● ● ●')),
+      speakBtns(w),h('p',{class:'center'},'Schreib das Wort aus dem Kopf:'),tb.row,msg)));
+    tb.inp.focus();
+  }
+  look();
+}
+
+/* Stufe 2: Lücken */
+function chooseGaps(en){
+  var tr=traps(en),gaps=[],i;
+  if(tr.length){for(i=tr[0].a;i<tr[0].b&&gaps.length<2;i++)gaps.push(i);
+    if(en.length>=7&&tr[1]){for(i=tr[1].a;i<tr[1].b&&gaps.length<3;i++)gaps.push(i);}}
+  if(!gaps.length){var v=[];for(i=0;i<en.length;i++)if(/[aeiou]/i.test(en[i]))v.push(i);
+    if(!v.length)for(i=0;i<en.length;i++)if(en[i]!==' ')v.push(i);
+    gaps.push(v[Math.floor(Math.random()*v.length)]);}
+  return gaps.sort(function(a,b){return a-b;});
+}
+var CONF={a:'e',e:'a i',i:'e y',o:'u a',u:'o',y:'i',c:'k s',k:'c',s:'c z',w:'v',v:'w',j:'g',g:'j',t:'d',d:'t',b:'p',p:'b'};
+function exGaps(w,fin){
+  var en=w.en,gaps=chooseGaps(en),filled={},msg=h('div',{class:'msg'});
+  var need=gaps.map(function(i){return en[i].toLowerCase();}),pool=[];
+  need.forEach(function(l){(CONF[l]||'').split(' ').forEach(function(c){if(c)pool.push(c);});});
+  'aeiou'.split('').forEach(function(c){pool.push(c);});
+  var dis=shuffle(pool).filter(function(c,i,a){return a.indexOf(c)===i;}).slice(0,gaps.length+3-need.length>0?3:3);
+  var tiles=shuffle(need.concat(dis)).map(function(l,i){return {l:l,id:i,used:false};});
+  var slots=h('div',{class:'slots'}),tray=h('div',{class:'tiles'});
+  function draw(){
+    slots.replaceChildren();
+    for(var i=0;i<en.length;i++){(function(i){
+      if(en[i]===' '){slots.append(h('span',{class:'sp'}));return;}
+      if(gaps.indexOf(i)<0)slots.append(h('span',{class:'slot fixed'},en[i]));
+      else if(filled[i]!=null)slots.append(h('button',{class:'slot fill',onclick:function(){tiles[filled[i]].used=false;delete filled[i];draw();}},tiles[filled[i]].l));
+      else slots.append(h('span',{class:'slot'},''));
+    })(i);}
+    tray.replaceChildren();
+    tiles.forEach(function(t){tray.append(h('button',{class:'tile',disabled:t.used,onclick:function(){place(t);}},t.l));});
+  }
+  function place(t){
+    var g=gaps.filter(function(i){return filled[i]==null;})[0];if(g==null)return;
+    filled[g]=t.id;t.used=true;draw();
+    if(gaps.every(function(i){return filled[i]!=null;})){
+      var typed='';for(var i=0;i<en.length;i++)typed+=gaps.indexOf(i)>=0?tiles[filled[i]].l:en[i];
+      var ok=gaps.every(function(i){return tiles[filled[i]].l.toLowerCase()===en[i].toLowerCase();});
+      if(ok){msg.textContent='Richtig! ✔';msg.className='msg ok';setTimeout(function(){fin({ok:true,typed:typed});},450);}
+      else{shake(slots);setTimeout(function(){fin({ok:false,typed:typed});},350);}
+    }
+  }
+  draw();
+  mount(frame('2 · Lücken',h('div',null,
+    h('div',{class:'prompt'},h('div',{class:'big-emoji'},w.e||'💬'),h('div',{class:'de'},w.de)),
+    speakBtns(w),slots,h('p',{class:'center soft'},'Tippe die fehlenden Buchstaben an.'),tray,msg)));
+  say(en,false);
+}
+
+/* Stufe 3: Wortsalat */
+function exScramble(w,fin){
+  var en=w.en,multi=en.indexOf(' ')>=0,units=multi?en.split(' '):en.split('');
+  var order=shuffle(units.map(function(u,i){return i;}));
+  for(var guard=0;guard<10&&units.length>1&&order.every(function(o,i){return o===i;});guard++)order=shuffle(order);
+  var tiles=order.map(function(o){return {l:units[o],used:false};}),placed=[];
+  var slots=h('div',{class:'slots'}),tray=h('div',{class:'tiles'}),msg=h('div',{class:'msg'});
+  function draw(){
+    slots.replaceChildren();
+    for(var i=0;i<units.length;i++){(function(i){
+      if(placed[i]!=null)slots.append(h('button',{class:'slot fill'+(multi?' wide':''),onclick:function(){tiles[placed[i]].used=false;placed.splice(i,1);draw();}},tiles[placed[i]].l));
+      else slots.append(h('span',{class:'slot'+(multi?' wide':'')},multi?'…':''));
+    })(i);}
+    tray.replaceChildren();
+    tiles.forEach(function(t,ti){tray.append(h('button',{class:'tile',disabled:t.used,onclick:function(){put(ti);}},t.l));});
+  }
+  function put(ti){
+    if(placed.length>=units.length)return;
+    placed.push(ti);tiles[ti].used=true;draw();
+    if(placed.length===units.length){
+      var typed=placed.map(function(p){return tiles[p].l;}).join(multi?' ':'');
+      if(judge(w,typed)==='ok'){msg.textContent='Richtig! ✔';msg.className='msg ok';setTimeout(function(){fin({ok:true,typed:typed});},450);}
+      else{shake(slots);setTimeout(function(){fin({ok:false,typed:typed});},350);}
+    }
+  }
+  draw();
+  mount(frame('3 · Wortsalat',h('div',null,
+    h('div',{class:'prompt'},h('div',{class:'big-emoji'},w.e||'💬'),h('div',{class:'de'},w.de)),
+    speakBtns(w),slots,h('p',{class:'center soft'},multi?'Bring die Wörter in die richtige Reihenfolge.':'Setze die Buchstaben richtig zusammen.'),tray,msg)));
+  say(en,false);
+}
+
+/* Stufe 4 + 5: Tippen / Diktat (auch Wiederholung gelernter Wörter) */
+function exTyped(w,mode,fin){
+  var helped=false,msg=h('div',{class:'msg'}),prompt=h('div',{class:'prompt'});
+  function hintBtn(){return h('button',{class:'btn small',onclick:function(){
+    helped=true;prompt.replaceChildren(h('div',{class:'big-emoji'},w.e||'🎧'),h('div',{class:'de'},w.de),h('div',{class:'blanks'},w.en[0]+w.en.slice(1).replace(/[^ ]/g,'_')));
+  }},'💡 Hilfe');}
+  if(mode===4)prompt.append(h('div',{class:'big-emoji'},w.e||'💬'),h('div',{class:'de'},w.de),h('div',{class:'blanks'},w.en.split(' ').map(function(x){return x.replace(/./g,'_ ');}).join('   ')));
+  else prompt.append(pic('kaninchen-hoert','small'),h('div',{class:'de'},'Hör genau zu und schreib das Wort.'));
+  var tb=typeBox(function(v,inp){
+    var r=judge(w,v);
+    if(r==='ok')fin({ok:true,helped:helped,typed:v});
+    else if(r==='uk'){msg.textContent='Fast! Im britischen Englisch schreibt man: '+w.en;msg.className='msg bad';shake(inp);}
+    else fin({ok:false,helped:helped,typed:v});
+  });
+  mount(frame(mode===4?'4 · Tippen':'5 · Diktat',h('div',null,prompt,speakBtns(w),tb.row,msg,h('div',{class:'center'},hintBtn()))));
+  say(w.en,false);tb.inp.focus();
+}
+
+/* Stufe 6: Buchstabieren (Tasten + Sprachausgabe der Buchstaben, optional Mikrofon) */
+var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+function lettersFrom(text){
+  var toks=text.toLowerCase().replace(/[^a-z ]/g,' ').split(/\s+/).filter(Boolean),out='';
+  for(var i=0;i<toks.length;i++){
+    var t=toks[i];
+    if(t==='double'){var nx=toks[i+1];if(nx&&/^(u|you|yu)$/.test(nx)){out+='w';i++;}else if(nx&&ALPHA[nx]){out+=ALPHA[nx]+ALPHA[nx];i++;}continue;}
+    if(ALPHA[t])out+=ALPHA[t];
+  }
+  return out;
+}
+function exSpell(w,fin){
+  var built='',helped=false,msg=h('div',{class:'msg'}),shown=h('div',{class:'word small'}),rl=null;
+  function target(){return w.en.replace(/ /g,'').toLowerCase();}
+  function draw(){shown.textContent=built||'…';}
+  function press(l){built+=l;draw();var i=l.charCodeAt(0)-97;if(i>=0&&i<26)say(LETTERNAME[i],true,"letter-"+l);}
+  var keys=h('div',{class:'keys'});
+  'abcdefghijklmnopqrstuvwxyz'.split('').forEach(function(l){keys.append(h('button',{class:'tile key',onclick:function(){press(l);}},l));});
+  var ctrl=h('div',{class:'row',style:'justify-content:center'},
+    w.en.indexOf(' ')>=0?h('button',{class:'btn',onclick:function(){built+=' ';draw();}},'␣ Leerzeichen'):null,
+    h('button',{class:'btn',onclick:function(){built=built.slice(0,-1);draw();}},'⌫'),
+    h('button',{class:'btn primary',onclick:function(){
+      if(!built)return;
+      if(built.replace(/ /g,'').toLowerCase()===target())fin({ok:true,helped:helped,typed:built});
+      else fin({ok:false,helped:helped,typed:built});
+    }},'Fertig ✔'));
+  var mic=null;
+  if(micOn()){
+    mic=h('button',{class:'btn blue',onclick:function(){listen(mic);}},'🎤 Buchstabieren');
+  }
+  function listen(btn){
+    try{
+      rl=new SR();rl.lang='en-GB';rl.interimResults=true;rl.maxAlternatives=5;rl.continuous=false;
+      msg.textContent='Ich höre zu … sag die Buchstaben nacheinander.';msg.className='msg';
+      rl.onresult=function(e){
+        var res=e.results[e.results.length-1],alts=[],i;
+        for(i=0;i<res.length;i++)alts.push(res[i].transcript);
+        var pick=null;
+        alts.forEach(function(a){var L=lettersFrom(a);if(!pick&&(L===target()||a.toLowerCase().replace(/[^a-z]/g,'')===target()))pick=target();});
+        built=pick||lettersFrom(alts[0])||alts[0].toLowerCase().replace(/[^a-z]/g,'');draw();
+      };
+      rl.onerror=function(e){msg.textContent=(e.error==='not-allowed'||e.error==='service-not-allowed')?'Das Mikrofon ist nicht erlaubt – nimm die Buchstaben-Tasten.':'Das hat nicht geklappt – nimm die Buchstaben-Tasten.';msg.className='msg bad';};
+      rl.onend=function(){if(msg.className==='msg')msg.textContent='Prüfe die Buchstaben und tippe auf „Fertig“.';};
+      rl.start();
+    }catch(e){msg.textContent='Mikrofon nicht verfügbar – nimm die Buchstaben-Tasten.';msg.className='msg bad';}
+  }
+  draw();
+  var prompt=h('div',{class:'prompt'},h('div',{class:'big-emoji'},w.e||'💬'),h('div',{class:'de'},w.de));
+  mount(frame('6 · Buchstabieren',h('div',null,pic('kaninchen-mikro','small'),prompt,speakBtns(w),
+    h('p',{class:'center'},'Buchstabiere das Wort: sag jeden Buchstaben laut und tippe ihn an.'),
+    shown,mic?h('div',{class:'center'},mic):null,msg,keys,ctrl,
+    h('div',{class:'center'},h('button',{class:'btn small',onclick:function(){helped=true;prompt.append(h('div',{class:'blanks'},w.en[0]+w.en.slice(1).replace(/[^ ]/g,'_')));}},'💡 Hilfe')))));
+  say(w.en,false);
+}
+
+/* Stufe 7: Meister – nur das deutsche Wort, keine Hilfe */
+function exMeister(w,fin){
+  var helped=false,msg=h("div",{class:"msg"}),prompt=h("div",{class:"prompt"},h("div",{class:"de",style:"font-size:34px"},w.de),h("p",{class:"soft"},"Schreib das englische Wort – ganz ohne Hilfe!"));
+  var tb=typeBox(function(v,inp){
+    var r=judge(w,v);
+    if(r==="ok"){say(w.en,false);msg.textContent="Richtig! ⭐";msg.className="msg ok";setTimeout(function(){fin({ok:true,helped:helped,typed:v});},900);}
+    else if(r==="uk"){msg.textContent="Fast! Im britischen Englisch schreibt man: "+w.en;msg.className="msg bad";shake(inp);}
+    else fin({ok:false,helped:helped,typed:v});
+  });
+  mount(frame("7 · Meister",h("div",null,prompt,tb.row,msg,h("div",{class:"center"},h("button",{class:"btn small",onclick:function(){helped=true;prompt.append(h("div",{class:"big-emoji"},w.e||"💬"),h("div",{class:"blanks"},w.en[0]+w.en.slice(1).replace(/[^ ]/g,"_")));}},"💡 Hilfe (dann zählt es nicht)")))));
+  tb.inp.focus();
+}
+
+/* ---------- Oberfläche ---------- */
+function selectKid(){
+  busy=false;view="select";
+  mount(h('h1',null,'✏️ Vokabeltrainer'),h('p',{class:'soft'},'Wer übt heute?'),
+    h('div',{class:'kids'},KIDS.map(function(k){return h('button',{class:'kid',style:'background:'+(k.color||'#8B6FC4'),onclick:function(){kid=k;try{localStorage.setItem('vt:currentKid',k.id);}catch(e){}loadP();home();}},avatar(k,'big'),k.name);})),
+    fam()?null:h('p',{class:'center'},h('button',{class:'btn small',onclick:connectScreen},'🔗 Mit Familie verbinden')));
+}
+function stat(){
+  var c=[0,0,0,0,0,0,0,0,0],now=Date.now(),due=0,sum=0,five=0;
+  WORDS.forEach(function(w){var r=P.w[w.en];if(!r){c[0]++;return;}c[Math.min(r.s,8)]++;if(r.d<=now)due++;});
+  WORDS.forEach(function(w){var r=P.w[w.en];sum+=pctOf(r);if(r&&r.s>=8)five++;});
+  return {c:c,due:due,pct:WORDS.length?Math.round(sum/WORDS.length):0,five:five};
+}
+var selTopic='';
+function home(noPull){
+  busy=false;view='home';
+  if(!kid){selectKid();return;}
+  var parent=kid.role==='parent';
+  if(parent&&noPull!==true&&fam())pullAll().then(function(ch){if(ch&&view==='home'&&kid&&kid.role==='parent'&&!busy)home(true);});
+  var st=stat(),tl=topicList(),learned=st.c[8],started=WORDS.length-st.c[0];
+  var chips=h('div',{class:'chips'},
+    h('button',{class:'chip'+(selTopic===''?' on':''),onclick:function(){selTopic='';home(true);}},'Alle Wörter',h('small',null,String(WORDS.length))));
+  tl.forEach(function(t){
+    var ws=WORDS.filter(function(w){return w.t===t;});if(!ws.length)return;
+    var l=ws.filter(function(w){var r=P.w[w.en];return r&&r.s>=8;}).length;
+    chips.append(h('button',{class:'chip'+(selTopic===t?' on':''),onclick:function(){selTopic=t;home(true);}},t,h('small',null,l+'/'+ws.length)));
+  });
+  var head=h('div',{class:'top'},h('h1',{style:'flex:1;margin:0'},'Hallo '+kid.name+'!'),
+    parent?h('button',{class:'btn small',onclick:function(){settings();}},'⚙️ Einstellungen'):null,
+    h('button',{class:'btn small',onclick:function(){kid=null;try{localStorage.removeItem('vt:currentKid');}catch(e){}selectKid();}},'Wechseln'));
+  var practice=[
+    h('div',{class:'card'},chestEl(st.pct),h('div',{class:'row',style:'align-items:center;justify-content:space-between;margin:0'},h('b',null,parent?'📖 Euer Vokabelschatz':'📖 Dein Vokabelschatz'),h('span',null,st.pct+' %')),barEl(st.pct,'big'),h('p',{class:'soft',style:'margin:6px 0 12px'},st.five+' von '+WORDS.length+' Wörtern mit 5 Sternen ⭐⭐⭐⭐⭐'),h('div',{class:'stats'},
+      h('div',null,h('b',null,String(st.due)),'zu wiederholen'),
+      h('div',null,h('b',null,String(st.c[0])),'noch neu'),
+      h('div',null,h('b',null,String(started-learned)),'in Arbeit'),
+      h('div',null,h('b',null,String(learned)),'5 Sterne ✓'))),
+    h('button',{class:'btn primary big',onclick:function(){startSession(selTopic||null);}},'▶ Los geht’s (ca. 10 Minuten)'),
+    h('h2',null,'Welche Wörter?'),chips,
+    h('div',{class:'row'},h('button',{class:'btn',onclick:wordsPage},'📖 Mein Vokabelschatz'),h('button',{class:'btn blue',onclick:function(){testSetup(WORDS.filter(function(w){return P.w[w.en]&&P.w[w.en].s>=2;}),'Test über alle Wörter, die du schon geübt hast.');}},'📝 Gemischter Test'))
+  ];
+  if(parent){
+    mount(head,
+      h('h2',{style:'margin-top:4px'},'📈 So lernen die Kinder'),
+      fam()?null:h('div',{class:'note'},'Hier steht nur, was auf diesem Gerät geübt wurde. Unter ⚙️ Einstellungen verbindest du die Geräte der Kinder mit der Familie, dann siehst du alles an einer Stelle.'),
+      weekBlock(home),
+      h('h2',null,'🐰 Selbst üben und testen'),
+      h('p',{class:'soft',style:'margin-top:0'},'Euer eigener Übungsbereich. Euer Fortschritt zählt hier nicht in die Wochenübersicht der Kinder.'),
+      practice);
+  }else{
+    mount(head,pic('kaninchen-winkt','hero'),weekKidCard(),practice);
+  }
+}
+var fMin=0,fMax=5;
+function inRange(w){var n=starsOf(P.w[w.en]);return n>=fMin&&n<=fMax;}
+function wordsPage(){
+  var rows=[],st=stat(),sel=WORDS.filter(inRange);
+  function mk(val,fn){var e=h("select",{class:"plain",style:"flex:none;font:inherit"});for(var i=0;i<=5;i++)e.append(h("option",{value:i,selected:i===val},i+" ★"));e.addEventListener("change",function(){fn(+e.value);});return e;}
+  topicList().forEach(function(t){
+    var ws=sel.filter(function(w){return w.t===t;});if(!ws.length)return;
+    rows.push(h("h2",null,t));
+    ws.forEach(function(w){var r=P.w[w.en],p=pctOf(r);
+      rows.push(h("div",{class:"wl"},h("span",null,w.e||""),
+        h("button",{onclick:function(){say(w.en,false);}},w.en+"  ",h("span",{class:"soft"},w.de),barEl(p)),
+        h("div",{class:"wr"},starsEl(starsOf(r)),h("small",{class:"soft"},p+" %"))));});
+  });
+  var seen=sel.filter(function(w){return P.w[w.en]&&P.w[w.en].s>=2;});
+  mount(h("div",{class:"top"},h("h1",{style:"flex:1;margin:0"},"📖 Mein Vokabelschatz"),h("button",{class:"btn small",onclick:home},"Zurück")),
+    h("div",{class:"card"},chestEl(st.pct),h("b",null,"Alle Wörter: "+st.pct+" %"),barEl(st.pct,"big"),h("p",{class:"soft",style:"margin:6px 0 0"},st.five+" von "+WORDS.length+" Wörtern mit 5 Sternen")),
+    h("div",{class:"card"},h("b",null,"Welche Wörter möchtest du üben?"),
+      h("div",{class:"row",style:"align-items:center"},"von",mk(fMin,function(v){fMin=v;if(fMax<fMin)fMax=v;wordsPage();}),"bis",mk(fMax,function(v){fMax=v;if(fMin>fMax)fMin=v;wordsPage();}),h("b",null,sel.length+" Wörter")),
+      h("div",{class:"row"},
+        h("button",{class:"btn primary",disabled:!sel.length,onclick:function(){startSession(null,sel);}},"▶ Diese Wörter üben"),
+        h("button",{class:"btn blue",disabled:!seen.length,onclick:function(){testSetup(seen,"Test mit den Wörtern von "+fMin+" bis "+fMax+" Sternen ("+seen.length+" Wörter).");}},"📝 Diese Wörter testen"))),
+    h("div",{class:"card"},h("b",null,"🏅 Meine Diplome"),h("p",{class:"soft",style:"margin:4px 0 8px"},"Sind bei allen Wörtern eines Themas 5 Sterne, bekommst du ein Diplom."),
+      h("div",{class:"chips"},topicList().filter(function(t){return WORDS.some(function(w){return w.t===t;});}).map(function(t){var ws=WORDS.filter(function(w){return w.t===t;}),f=ws.filter(function(w){var r=P.w[w.en];return r&&r.s>=8;}).length,got=P&&P.dip&&P.dip[t];
+        return got?h("button",{class:"chip on",onclick:function(){certificate(t,wordsPage);}},pic("papyrusrolle","mini"),t):h("span",{class:"chip locked"},pic("papyrusrolle-gesperrt","mini"),t,h("small",null,f+"/"+ws.length));}))),
+    h("p",{class:"soft"},"☆ neu · ★ entdeckt · ★★ Wortsalat · ★★★ Tippen & Hören · ★★★★ Buchstabieren · ★★★★★ Meister: nur das deutsche Wort, ganz ohne Hilfe. Ein Fehler kostet einen Stern."),rows);
+}
+function settings(noPull){
+  view='settings';
+  if(!noPull&&fam())pullAll().then(function(ch){if(ch&&view==='settings')settings(true);});
+  var en=h('input',{class:'plain',type:'text',placeholder:'English word',autocapitalize:'off',spellcheck:'false'});
+  var de=h('input',{class:'plain',type:'text',placeholder:'Deutsch (z. B. die Schildkröte)'});
+  var em=h('input',{class:'plain',type:'text',placeholder:'Emoji',style:'max-width:90px'});
+  var tp=h('input',{class:'plain',type:'text',placeholder:'Thema (z. B. Tiere)',value:'Weitere Wörter'});
+  var msg=h('div',{class:'msg'}),lmsg=h('div',{class:'msg'});
+  var lst=h('textarea',{class:'plain',rows:'6',style:'width:100%;font:inherit',autocapitalize:'off',spellcheck:'false',placeholder:'friend = der Freund\nschool = die Schule'});
+  var ltp=h('input',{class:'plain',type:'text',placeholder:'Thema für diese Wörter',value:'Weitere Wörter'});
+  var mic=h('input',{type:'checkbox',style:'width:24px;height:24px'});mic.checked=localStorage.getItem('vt:mic')==='1';
+  mic.addEventListener('change',function(){try{localStorage.setItem('vt:mic',mic.checked?'1':'0');}catch(e){}});
+  mount(h('div',{class:'top'},h('h1',{style:'flex:1;margin:0'},'⚙️ Einstellungen'),h('button',{class:'btn small',onclick:function(){home();}},'Zurück')),
+    familyCard(),
+    h('div',{class:'card'},h('h2',{style:'margin-top:0'},'Buchstabieren per Mikrofon'),
+      SR?h('label',{class:'row'},mic,h('span',null,'Mikrofon in Stufe 6 anbieten')):h('p',null,'Dieser Browser unterstützt keine Spracherkennung. Stufe 6 läuft über die Buchstaben-Tasten.'),
+      h('p',{class:'soft'},'Hinweis: Bei eingeschaltetem Mikrofon wird die Sprache vom Browser an einen Online-Dienst (Google bzw. Apple) zur Erkennung geschickt. Bitte nur einschalten, wenn das für euch in Ordnung ist. Ohne Mikrofon sagen die Kinder die Buchstaben laut und tippen sie an.')),
+    h('div',{class:'card'},h('h2',{style:'margin-top:0'},'Eigenes Wort ergänzen'),
+      h('div',{class:'row'},en,em),h('div',{class:'row'},de),h('div',{class:'row'},tp),
+      h('button',{class:'btn primary',onclick:function(){
+        var w=en.value.trim();
+        if(!ELIG.test(w)){msg.textContent='Nur Buchstaben, Leerzeichen und Bindestrich.';msg.className='msg bad';return;}
+        var ex=lj('vt:extra',[]);ex.push({en:w,de:de.value.trim(),e:em.value.trim(),t:tp.value.trim()||'Weitere Wörter'});sj('vt:extra',ex);
+        WORDS=loadWords();en.value=de.value=em.value='';msg.textContent='Gespeichert ✔ ('+WORDS.length+' Wörter)';msg.className='msg ok';
+      }},'Wort speichern'),msg),
+    h('div',{class:'card'},h('h2',{style:'margin-top:0'},'Ganze Liste einfügen'),
+      h('p',{class:'soft'},'Eine Zeile pro Wort: englisch = deutsch (zum Beispiel: friend = der Freund). Sätze und Zeichen wie . ! ? / werden übersprungen.'),
+      lst,h('div',{class:'row'},ltp),
+      h('button',{class:'btn primary',onclick:function(){
+        var ex=lj('vt:extra',[]),n=0,skip=0,have={};
+        WORDS.forEach(function(w){have[w.en.toLowerCase()]=1;});
+        lst.value.split('\n').forEach(function(line){
+          var p=line.split('='),w=(p[0]||'').trim();if(!w)return;
+          if(!ELIG.test(w)){skip++;return;}
+          if(have[w.toLowerCase()]){skip++;return;}
+          have[w.toLowerCase()]=1;ex.push({en:w,de:(p[1]||'').trim(),e:'',t:ltp.value.trim()||'Weitere Wörter'});n++;
+        });
+        sj('vt:extra',ex);WORDS=loadWords();lst.value='';
+        lmsg.textContent=n+' neue Wörter gespeichert'+(skip?' · '+skip+' übersprungen (schon vorhanden oder Satz)':'')+' · jetzt '+WORDS.length+' Wörter';lmsg.className='msg ok';
+      }},'Liste speichern'),lmsg));
+}
+
+(function(){var m=(location.hash||'').match(/fam=([a-z0-9]{20,})/i);if(m){try{localStorage.setItem('vt:fam',m[1].toLowerCase());}catch(e){}history.replaceState(null,'',location.pathname+location.search);}})();
+if(kid)loadP();
+home();
+initSync();
+})();
+</script>
+</body>
+</html>
