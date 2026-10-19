@@ -24,11 +24,12 @@ Eine einzige `index.html`, keine Abhängigkeiten, läuft im Browser und speicher
   Die Familie hat einen zufälligen Code (`vt:fam`); Geräte verbindet man mit dem Link `…/#fam=CODE`. Gespeichert wird pro Profil nur Name, Häschen, Lernstand und Lernprotokoll.
   Regeln: `firestore.rules`. Zusammenführen pro Wort nach Zeitstempel (`t`), mehrere Geräte pro Kind sind möglich.
 
-## Spiele und Punkte
-- Nach jedem **zweiten** Übungsdurchlauf (ab 8 Antworten, gezählt pro Tag) darf das Kind wählen: **Jump-and-Run** (3 Leben) oder **Sudoku**. Nach dem ersten Durchlauf steht ein Hinweis. Keine Pause mitten im Durchlauf. Spielzeit zählt nicht als Lernzeit. Eltern können die Spiele im Eltern-Bereich ausschalten (nur dieses Gerät).
-- **Jump-and-Run** (`spiel-run.js`, Canvas): Tippen/Pfeil hoch = springen, 2× = Doppelsprung, nach unten wischen/Pfeil runter = ducken (Hasentunnel), 2× schnell nach oben wischen/Leertaste 2× = Riesenmöhre ziehen. Kein Ziel, es wird langsam schneller. Rekord je Profil (`g.run`).
-- **Sudoku** (`spiel-sudoku.js`): 6×6 mit 2×3-Kästchen, eindeutig lösbar, bis 3 Tipps, Schwierigkeit steigt mit gelösten Rätseln (`g.sudoku`).
-- **Punkte** (je Woche Mo–So, `log[tag].pt`): 2 je richtiger Antwort, 10 je neuem Stern, Spiele (Jump-and-Run: Punkte/10, Sudoku: 60). Profilwahl zeigt das **Podest** der Woche (Ellena, Merle, Eltern), jedes Profil sieht Punkte und Platz. Der Abgleich übertragt auch das Eltern-Profil.
+## Spiele, Podeste und Ampel
+- Nach jedem **zweiten** Übungsdurchlauf (ab 8 Antworten, gezählt pro Tag) darf das Kind wählen: **Jump-and-Run** (3 Leben) oder **Sudoku**. Nach dem ersten Durchlauf steht ein Hinweis. Keine Pause mitten im Durchlauf. Spielzeit zählt nicht als Lernzeit. Eltern können die Spiele ausschalten (nur dieses Gerät).
+- **Jump-and-Run** (`spiel-run.js`): Tippen/Pfeil hoch = springen, 2× = Doppelsprung, nach unten wischen/Pfeil runter = ducken, 2× schnell nach oben wischen/Leertaste 2× = Möhre ziehen. Rekord = weiteste Strecke in Metern (`g.run.bm`).
+- **Sudoku** (`spiel-sudoku.js`): klein 6×6 oder groß 9×9, eindeutig lösbar, bis 3 Tipps (je 30 s Strafzeit). Bestzeit je Größe (`g.sd6.fast`, `g.sd9.fast`).
+- **Profilwahl:** Kacheln mit **Lernzeit-Ampel** (grün/orange/rot nach Tempo zum Wochenziel 4 Tage × 20 Min, mit Zähler „An x Tagen gelernt · y von 80 Min“) und zwei **Spiele-Podeste** (weitester Lauf, schnellstes Sudoku). Lernstände der Wörter sieht man bei den anderen nicht.
+- **Eltern-Code:** Das Eltern-Profil ist mit einem 4-stelligen Code gesperrt (Standard 0000, im Eltern-Bereich änderbar, gilt je Gerät) und wird nie automatisch angemeldet. Die Spiele der Eltern liegen dahinter.
 
 ## Aussprache
 Vorab erzeugte britische MP3s in `audio/` (Google Cloud TTS, en-GB-Neural2-A): normal (Tempo 0,95),

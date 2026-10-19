@@ -204,7 +204,7 @@ function start(box,opt){
     g.font="22px "+EMOJI;g.fillText(hearts,12,10);
     g.textAlign="right";g.font="800 22px system-ui,sans-serif";g.fillText(score()+" Punkte",W-12,10);
     g.font="600 14px system-ui,sans-serif";g.fillStyle="#6E6A63";
-    g.fillText(Math.floor(s.dist/50)+" m"+(opt.best?" · Rekord "+opt.best:""),W-12,36);
+    g.fillText(Math.floor(s.dist/50)+" m"+(opt.best?" · Rekord "+opt.best+" m":""),W-12,36);
     if(s.mode==="ready"){
       g.fillStyle="rgba(255,255,255,.86)";g.fillRect(0,44,W,166);
       g.fillStyle="#1B1A1E";g.textAlign="center";g.textBaseline="middle";
@@ -221,7 +221,7 @@ function start(box,opt){
   function finish(){
     if(s.mode==="over")return;
     s.mode="over";
-    var res={score:score(),meters:Math.floor(s.dist/50),carrots:s.carrots,pulls:s.pulls,newRecord:score()>(opt.best||0)};
+    var res={score:score(),meters:Math.floor(s.dist/50),carrots:s.carrots,pulls:s.pulls,newRecord:Math.floor(s.dist/50)>(opt.best||0)};
     setTimeout(function(){if(stopped)return;stop();if(opt.onEnd)opt.onEnd(res);},700);
   }
   function frame(ts){
