@@ -278,7 +278,7 @@ document.addEventListener("pointerdown",activity,true);
 document.addEventListener("keydown",activity,true);
 document.addEventListener("visibilitychange",function(){lastAct=0;if(document.hidden&&P&&kid){saveP();flush();}});
 window.addEventListener("pagehide",function(){if(P&&kid){saveP();flush();}});
-function normP(p){p=p&&typeof p==="object"?p:{};p.w=p.w||{};p.err=p.err||{};p.log=p.log||{};p.dip=p.dip||{};p.g=p.g||{};return p;}
+function normP(p){p=p&&typeof p==="object"?p:{};p.w=p.w||{};p.err=p.err||{};p.log=p.log||{};p.dip=p.dip||{};p.g=p.g||{};p.gz=p.gz||{};return p;}
 function profileData(k){return normP(lj("vt:"+k.id,null));}
 var GOAL_S=1200,GOAL_DAYS=4;
 var STARNAME=["Noch nicht geübt","Entdeckt","Wortsalat","Tippen & Hören","Buchstabieren","Meister"];
@@ -383,7 +383,7 @@ function setSync(ok,msg){try{if(ok){localStorage.setItem("vt:syncAt",String(Date
 function mergeP(a,b){
   if(!a)return normP(b);if(!b)return normP(a);
   a=normP(a);b=normP(b);
-  var o={w:{},err:{},log:{},dip:{},g:{}};
+  var o={w:{},err:{},log:{},dip:{},g:{},gz:{}};
   function keys(x,y){var s={};Object.keys(x||{}).concat(Object.keys(y||{})).forEach(function(k){s[k]=1;});return Object.keys(s);}
   keys(a.w,b.w).forEach(function(x){var ra=(a.w||{})[x],rb=(b.w||{})[x];o.w[x]=!ra?rb:!rb?ra:((rb.t||0)>(ra.t||0)?rb:ra);});
   keys(a.log,b.log).forEach(function(x){
@@ -395,6 +395,7 @@ function mergeP(a,b){
     o.log[x]=m;
   });
   keys(a.err,b.err).forEach(function(x){o.err[x]=Math.max((a.err||{})[x]||0,(b.err||{})[x]||0);});
+  keys(a.gz,b.gz).forEach(function(x){o.gz[x]=Math.max((a.gz||{})[x]||0,(b.gz||{})[x]||0);});
   keys(a.g,b.g).forEach(function(x){
     var ga=(a.g||{})[x],gb=(b.g||{})[x];
     if(!ga||!gb){o.g[x]=ga||gb;return;}
@@ -405,6 +406,7 @@ function mergeP(a,b){
     });
     o.g[x]=m;
   });
+  Object.keys(o.g).forEach(function(x){if(o.g[x]&&(o.g[x].t||0)<=(o.gz[x]||0))delete o.g[x];});
   if(a.rc||b.rc){var ra=a.rc||{d:"",n:0},rb=b.rc||{d:"",n:0};o.rc=ra.d>rb.d?ra:rb.d>ra.d?rb:{d:ra.d,n:Math.max(ra.n||0,rb.n||0)};}
   keys(a.dip,b.dip).forEach(function(x){var da=(a.dip||{})[x],db=(b.dip||{})[x];o.dip[x]=!da?db:!db?da:(da<db?da:db);});
   return o;
@@ -710,7 +712,7 @@ function summary(){
 /* ---------- Spiele (Belohnung nach der Runde und Spielpause) ---------- */
 var inGame=false;
 function gamesOn(){try{return localStorage.getItem("vt:games")!=="0";}catch(e){return true;}}
-var APPV="2026-10-19-4";
+var APPV="2026-10-19-5";
 function loadScript(src,ok,fail){
   window.__ls=window.__ls||{};
   if(window.__ls[src]){ok();return;}
@@ -757,7 +759,7 @@ function playRun(done,opts){
   loadScript("spiel-run.js",function(){
     run=window.HoppelRun.start(box,{best:best,startT:startT,fit:true,onEnd:function(r){
       var G=gameStats(),R=G.run||(G.run={bm:0,best:0,plays:0});
-      R.plays=(R.plays||0)+1;if(r.meters>(R.bm||0))R.bm=r.meters;if(r.score>(R.best||0))R.best=r.score;saveP();
+      R.plays=(R.plays||0)+1;R.t=Date.now();if(r.meters>(R.bm||0))R.bm=r.meters;if(r.score>(R.best||0))R.best=r.score;saveP();
       closeFS();
       page(h("div",{class:"card center"},
         pic(r.newRecord&&best>0?"ergebnis-5":"kaninchen-winkt","hero"),
@@ -789,7 +791,7 @@ function startSudoku(size,done){
     window.HoppelSudoku.start(box,{size:size,onEnd:function(r){
       if(!r.solved){end();done();return;}
       var G=gameStats(),S2=G[key]||(G[key]={solved:0,fast:0}),had=S2.fast;
-      S2.solved=(S2.solved||0)+1;var neu=!had||r.total<had;if(neu)S2.fast=r.total;saveP();
+      S2.t=Date.now();S2.solved=(S2.solved||0)+1;var neu=!had||r.total<had;if(neu)S2.fast=r.total;saveP();
       box.replaceChildren(h("div",{class:"card center"},pic(neu&&had?"ergebnis-5":"kaninchen-winkt","hero"),
         h("h2",null,neu&&had?"Neue Bestzeit! 🏆":"Gelöst! 🎉"),
         h("p",null,h("b",null,fmtT(r.total)+" Minuten"),r.hints?" (mit "+r.hints*30+" Sekunden Strafzeit für Tipps)":" · ohne Tipp"),
@@ -1102,6 +1104,24 @@ function selectKid(){
     podia(),
     fam()?null:h("p",{class:"center"},h("button",{class:"btn small",onclick:connectScreen},"🔗 Mit Familie verbinden")));
 }
+function resetRecords(k,msg){
+  if(!confirm("Alle Spiel-Rekorde von "+k.name+" (Jump-and-Run und Sudoku) wirklich zurücksetzen? Das gilt auch auf den anderen Geräten."))return;
+  var now=Date.now(),me=kid&&k.id===kid.id,p=normP(me?P:profileData(k));
+  p.g={};p.gz={run:now,sd6:now,sd9:now};
+  if(me)P=p;
+  sj("vt:"+k.id,p);
+  msg.textContent="Wird gespeichert …";msg.className="msg";
+  pushProfile(k).then(function(ok){
+    msg.textContent=ok||!fam()?"Rekorde von "+k.name+" zurückgesetzt ✔":"Zurückgesetzt, aber der Abgleich hat nicht geklappt. Bitte später „Jetzt abgleichen“ drücken.";
+    msg.className=ok||!fam()?"msg ok":"msg bad";
+  });
+}
+function resetCard(){
+  var msg=h("div",{class:"msg"});
+  return h("div",{class:"card"},h("h2",{style:"margin-top:0"},"🏆 Rekorde zurücksetzen"),
+    h("p",{class:"soft"},"Setzt die Jump-and-Run-Weite und die Sudoku-Bestzeiten eines Profils auf null zurück, auch auf den anderen Geräten. Der Lernstand der Vokabeln bleibt unberührt."),
+    KIDS.map(function(k){return h("div",{class:"wl",style:"grid-template-columns:56px 1fr auto"},avatar(k),h("b",null,k.name),h("button",{class:"btn small",onclick:function(){resetRecords(k,msg);}},"Zurücksetzen"));}),msg);
+}
 function pinCard(){
   var a=h("input",{class:"plain",type:"password",inputmode:"numeric",maxlength:"4",placeholder:"Neuer Code (4 Ziffern)",autocomplete:"off"}),msg=h("div",{class:"msg"});
   return h("div",{class:"card"},h("h2",{style:"margin-top:0"},"🔒 Eltern-Code"),
@@ -1202,6 +1222,7 @@ function settings(noPull){
   mount(h('div',{class:'top'},h('h1',{style:'flex:1;margin:0'},'⚙️ Einstellungen'),h('button',{class:'btn small',onclick:function(){home();}},'Zurück')),
     familyCard(),
     pinCard(),
+    resetCard(),
     h('div',{class:'card'},h('h2',{style:'margin-top:0'},'🎮 Spiele'),h('label',{class:'row'},gmBox,h('span',null,'Spiele als Belohnung und Spielpause anbieten')),h('p',{class:'soft'},'Nach jedem zweiten Übungsdurchlauf darf das Kind wählen: Jump-and-Run (3 Leben) oder ein Sudoku (klein 6×6 oder groß 9×9). Die Spielzeit zählt nicht als Lernzeit. Der weiteste Lauf und die schnellste Sudoku-Zeit stehen auf den Podesten der Profilwahl. Die Einstellung gilt nur für dieses Gerät.')),
     h('div',{class:'card'},h('h2',{style:'margin-top:0'},'Buchstabieren per Mikrofon'),
       SR?h('label',{class:'row'},mic,h('span',null,'Mikrofon in Stufe 6 anbieten')):h('p',null,'Dieser Browser unterstützt keine Spracherkennung. Stufe 6 läuft über die Buchstaben-Tasten.'),
