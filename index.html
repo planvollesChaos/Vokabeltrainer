@@ -57,6 +57,11 @@ p{margin:6px 0}.soft{color:var(--soft)}.center{text-align:center}
 .podium.mini{margin:12px 0 0}.podium.mini .pod{cursor:default}.podium.mini .pname{font-size:17px}
 .pindots{display:flex;gap:14px;justify-content:center;margin:18px 0}.pindots span{width:20px;height:20px;border-radius:50%;border:3px solid var(--ink)}.pindots span.on{background:var(--ink)}
 .pinpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:320px;margin:10px auto}.pinpad .btn{font-size:26px;min-height:62px}
+.gamefs{position:fixed;inset:0;z-index:50;background:#1d1b2b;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:none}
+.gamebox{display:flex;align-items:center;justify-content:center;width:100%;height:100%}
+.gamequit{position:absolute;right:10px;bottom:10px;z-index:3;opacity:.85}
+.rothint{position:absolute;inset:0;z-index:4;background:#1d1b2b;color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px}
+.rotico{font-size:76px;line-height:1;animation:rotp 2.4s ease-in-out infinite}@keyframes rotp{0%,25%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}
 .avatar.pod{width:100%;max-width:96px;height:96px;object-fit:contain;display:block;margin:0 auto 4px}.avatar.pod.wide{width:100%;max-width:120px;height:74px}.avatar.ph.pod{width:84px;height:84px;font-size:48px}
 .podium{display:flex;align-items:flex-end;justify-content:center;gap:8px;margin:20px 0 8px}.pod{flex:1;max-width:210px;min-width:0;background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;touch-action:manipulation}.pname{font-weight:800;font-size:20px}.ppts{color:var(--soft);font-size:15px;margin-bottom:6px}.step{width:100%;border-radius:14px 14px 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:8px;font-size:30px;font-weight:800;color:#fff;transition:height .4s}
 .avatar.wide{width:92px;height:56px}.avatar.big.wide{width:170px;height:100px}
@@ -723,24 +728,52 @@ function sdLine(size){
   var out=KIDS.map(function(k){var p=(kid&&k.id===kid.id)?P:profileData(k),t=gameVal(p,"sd"+size);return k.name+": "+(t?fmtT(t):"–");});
   return "🏆 Schnellste Zeit "+(size===9?"groß":"klein")+" – "+out.join(" · ");
 }
+var fsEl=null,fsOff=null;
+function closeFS(){
+  if(!fsEl)return;
+  try{if(document.fullscreenElement&&document.exitFullscreen){var pe=document.exitFullscreen();if(pe&&pe.catch)pe.catch(function(){});}}catch(e){}
+  try{if(screen.orientation&&screen.orientation.unlock)screen.orientation.unlock();}catch(e){}
+  if(fsOff)fsOff();
+  fsEl.remove();fsEl=null;fsOff=null;
+  document.documentElement.style.overflow="";document.body.style.overflow="";
+}
+function enterFS(){
+  closeFS();
+  var o=h("div",{class:"gamefs"});document.body.append(o);fsEl=o;
+  document.documentElement.style.overflow="hidden";document.body.style.overflow="hidden";
+  if((navigator.maxTouchPoints||0)>0){
+    try{
+      var f=o.requestFullscreen||o.webkitRequestFullscreen;
+      if(f){var pr=f.call(o);if(pr&&pr.then)pr.then(function(){try{var l=screen.orientation.lock("landscape");if(l&&l.catch)l.catch(function(){});}catch(e){}}).catch(function(){});}
+    }catch(e){}
+  }
+  return o;
+}
 function playRun(done,opts){
   inGame=true;lastAct=0;
-  var box=h("div"),R0=(P.g||{}).run||{},best=R0.bm||0,startT=(opts&&opts.startT)||0;
+  var o=enterFS(),box=h("div",{class:"gamebox"}),R0=(P.g||{}).run||{},best=R0.bm||0,startT=(opts&&opts.startT)||0,run=null,ignore=false;
   function end(){inGame=false;lastAct=0;}
-  mount(h("div",{class:"top"},h("h1",{style:"flex:1;margin:0"},"🏃 Jump-and-Run")),
-    h("p",{class:"soft",style:"margin:0 0 8px"},"Sammle Karotten und weiche den Hindernissen aus. Du hast 3 Leben. Wie weit kommst du?"),box);
+  var hint=h("div",{class:"rothint"},h("div",{class:"rotico"},"📱"),h("h2",{style:"margin:0"},"Bitte dreh dein Gerät ins Querformat"),
+    h("p",{style:"margin:0"},"Dann hat Hoppel mehr Platz zum Rennen."),
+    h("button",{class:"btn",onclick:function(){ignore=true;upd();}},"Lieber hochkant spielen"));
+  function upd(){hint.style.display=(!ignore&&window.innerHeight>window.innerWidth)?"flex":"none";}
+  window.addEventListener("resize",upd);fsOff=function(){window.removeEventListener("resize",upd);};
+  var quit=h("button",{class:"btn small gamequit",onclick:function(){if(run&&run.stop)run.stop();closeFS();end();done();}},"✕ Beenden");
+  o.append(box,hint,quit);upd();
+  function page(inner){mount(h("div",{class:"top"},h("h1",{style:"flex:1;margin:0"},"🏃 Jump-and-Run")),inner);}
   loadScript("spiel-run.js",function(){
-    window.HoppelRun.start(box,{best:best,startT:startT,onEnd:function(r){
+    run=window.HoppelRun.start(box,{best:best,startT:startT,fit:true,onEnd:function(r){
       var G=gameStats(),R=G.run||(G.run={bm:0,best:0,plays:0});
       R.plays=(R.plays||0)+1;if(r.meters>(R.bm||0))R.bm=r.meters;if(r.score>(R.best||0))R.best=r.score;saveP();
-      box.replaceChildren(h("div",{class:"card center"},
+      closeFS();
+      page(h("div",{class:"card center"},
         pic(r.newRecord&&best>0?"ergebnis-5":"kaninchen-winkt","hero"),
         h("h2",null,r.newRecord&&best>0?"Neuer Rekord! 🏆":"Geschafft!"),
         h("p",null,h("b",null,r.meters+" m weit")," · "+r.score+" Punkte · "+r.carrots+" Karotten"+(r.pulls?" · "+r.pulls+" Möhre(n) gezogen":"")),
         h("p",{class:"soft"},recordsLine()),
         h("button",{class:"btn primary big",onclick:function(){end();done();}},"Weiter")));
     }});
-  },function(){end();box.textContent="Das Spiel konnte nicht geladen werden.";setTimeout(done,1500);});
+  },function(){closeFS();page(h("div",{class:"card center"},h("p",null,"Das Spiel konnte nicht geladen werden.")));setTimeout(function(){end();done();},1500);});
 }
 function playSudoku(done,opts){
   var g=P.g||{};

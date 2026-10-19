@@ -23,7 +23,10 @@ function start(box,opt){
   cv.width=W*DPR;cv.height=H*DPR;
   cv.style.cssText="width:100%;max-width:720px;height:auto;display:block;margin:0 auto;border-radius:16px;border:3px solid #DDD6C8;touch-action:none;background:#cfe6ff;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none";
   cv.setAttribute("aria-label","Spielfeld: tippen zum Springen, nach unten wischen zum Ducken");
+  if(opt.fit){cv.style.cssText="display:block;touch-action:none;background:#cfe6ff;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none";}
   box.replaceChildren(cv);
+  function fit(){var w=Math.min(window.innerWidth,window.innerHeight*W/H);cv.style.width=w+"px";cv.style.height=(w*H/W)+"px";}
+  if(opt.fit){fit();window.addEventListener("resize",fit);}
   var g=cv.getContext("2d");g.setTransform(DPR,0,0,DPR,0,0);
   var hop=new Image();hop.src="bilder/kaninchen-winkt.webp";
 
@@ -79,6 +82,7 @@ function start(box,opt){
     stopped=true;cancelAnimationFrame(raf);
     cv.removeEventListener("pointerdown",onDown);cv.removeEventListener("pointermove",onMove);cv.removeEventListener("pointerup",onUp);
     document.removeEventListener("keydown",onKey);
+    window.removeEventListener("resize",fit);
   }
 
   /* ---------- Spiellogik ---------- */
@@ -101,6 +105,7 @@ function start(box,opt){
     else if(kind==="pit")o={kind:"pit",x:W+40,w:Math.round(single*0.45)};
     else if(kind==="longpit")o={kind:"longpit",x:W+40,w:Math.round(single*0.95)};
     else o={kind:"carrot",x:W+40,w:40,h:100};
+    if((o.kind==="duck"||o.kind==="carrot")&&s.cars.some(function(c){return c.x>W+40-110&&c.x<W+40+o.w+110;})){s.nextObs=60;return;}
     s.obs.push(o);
     s.nextObs=Math.max(340,rand(1.25,2.0)*s.speed*0.9+o.w+(kind.indexOf("pit")>=0?140:kind==="carrot"?120:0));
   }
@@ -116,7 +121,11 @@ function start(box,opt){
     s.clouds.forEach(function(c){c.x-=dx*0.15*c.k;if(c.x<-120){c.x=W+rand(0,160);c.y=rand(18,110);}});
     s.nextObs-=dx;s.nextCar-=dx;
     if(s.nextObs<=0)spawn();
-    if(s.nextCar<=0){var base=GROUND-rand(50,130);for(i=0;i<3;i++)s.cars.push({x:W+30+i*38,y:base+(i===1?-14:0),got:false});s.nextCar=rand(260,520);}
+    if(s.nextCar<=0){
+      var blocked=s.obs.some(function(o){return (o.kind==="duck"||o.kind==="carrot")&&!o.pulled&&o.x<W+30+76+110&&o.x+o.w>W+30-110;});
+      if(blocked)s.nextCar=50;
+      else{var base=GROUND-rand(50,130);for(i=0;i<3;i++)s.cars.push({x:W+30+i*38,y:base+(i===1?-14:0),got:false});s.nextCar=rand(260,520);}
+    }
     s.obs.forEach(function(o){o.x-=dx;});s.cars.forEach(function(c){c.x-=dx;});
     s.cars=s.cars.filter(function(c){return c.x>-40&&!c.got;});
     s.pops.forEach(function(p){p.y-=40*dt;p.life-=dt;p.x-=dx;});s.pops=s.pops.filter(function(p){return p.life>0;});
