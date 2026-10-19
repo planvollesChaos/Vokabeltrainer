@@ -24,10 +24,11 @@ Eine einzige `index.html`, keine Abhängigkeiten, läuft im Browser und speicher
   Die Familie hat einen zufälligen Code (`vt:fam`); Geräte verbindet man mit dem Link `…/#fam=CODE`. Gespeichert wird pro Profil nur Name, Häschen, Lernstand und Lernprotokoll.
   Regeln: `firestore.rules`. Zusammenführen pro Wort nach Zeitstempel (`t`), mehrere Geräte pro Kind sind möglich.
 
-## Spiele
-- Belohnung: Nach jeder Übungsrunde (ab 8 Antworten) gibt es eine Spielrunde, nach etwa 20 Minuten am Stück eine Spielpause (ersetzt die frühere Wartepause). Die Runde endet von selbst nach 3 Leben. Spielzeit zählt nicht als Lernzeit. Eltern können Spiele im Eltern-Bereich ausschalten.
-- **Jump-and-Run** (`spiel-run.js`, Canvas ohne Bibliothek): Tippen = springen, 2× tippen = Doppelsprung, nach unten wischen = ducken (Hasentunnel), 2× schnell nach oben wischen = Riesenmöhre ziehen (Laptop: Pfeil hoch = springen, Pfeil runter = ducken, Leertaste 2× schnell = Möhre ziehen). Kein Ziel, es wird immer schneller; Punkte = Strecke + Karotten. Rekorde je Profil (`g.run`), beide Kinder sehen die Rekorde des anderen.
-- Geplant: Sudoku als zweites Spiel (Auswahl „Action oder Denken“ ist im Spielmenü schon vorbereitet).
+## Spiele und Punkte
+- Nach jedem **zweiten** Übungsdurchlauf (ab 8 Antworten, gezählt pro Tag) darf das Kind wählen: **Jump-and-Run** (3 Leben) oder **Sudoku**. Nach dem ersten Durchlauf steht ein Hinweis. Keine Pause mitten im Durchlauf. Spielzeit zählt nicht als Lernzeit. Eltern können die Spiele im Eltern-Bereich ausschalten (nur dieses Gerät).
+- **Jump-and-Run** (`spiel-run.js`, Canvas): Tippen/Pfeil hoch = springen, 2× = Doppelsprung, nach unten wischen/Pfeil runter = ducken (Hasentunnel), 2× schnell nach oben wischen/Leertaste 2× = Riesenmöhre ziehen. Kein Ziel, es wird langsam schneller. Rekord je Profil (`g.run`).
+- **Sudoku** (`spiel-sudoku.js`): 6×6 mit 2×3-Kästchen, eindeutig lösbar, bis 3 Tipps, Schwierigkeit steigt mit gelösten Rätseln (`g.sudoku`).
+- **Punkte** (je Woche Mo–So, `log[tag].pt`): 2 je richtiger Antwort, 10 je neuem Stern, Spiele (Jump-and-Run: Punkte/10, Sudoku: 60). Profilwahl zeigt das **Podest** der Woche (Ellena, Merle, Eltern), jedes Profil sieht Punkte und Platz. Der Abgleich übertragt auch das Eltern-Profil.
 
 ## Aussprache
 Vorab erzeugte britische MP3s in `audio/` (Google Cloud TTS, en-GB-Neural2-A): normal (Tempo 0,95),

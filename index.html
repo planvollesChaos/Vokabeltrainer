@@ -49,6 +49,8 @@ p{margin:6px 0}.soft{color:var(--soft)}.center{text-align:center}
 .wbars{position:relative;display:flex;gap:6px;align-items:flex-end;height:96px;margin:8px 0}.wbars .goal{position:absolute;left:0;right:0;border-top:2px dashed var(--ok);pointer-events:none}.wbars .goal small{position:absolute;right:0;top:-16px;font-size:11px;color:var(--ok)}.wb i.ok{background:var(--ok)}.wb .stack{width:70%;display:flex;flex-direction:column;justify-content:flex-end}.wb .stack i{width:100%}.wb i.xtra{background:#E8A33D;border-radius:6px 6px 0 0}.wb .stack i.ok,.wb .stack i.on{border-radius:0 0 2px 2px}.wb .stack i.xtra+i.ok{border-radius:0 0 2px 2px}
 .srank{margin:6px 0}.sr{margin:5px 0}.srt{display:flex;align-items:center;gap:8px}.srt small{flex:1}.srt b{min-width:28px;text-align:right}.sr .pbar{margin-top:2px;height:7px}.pbar.gold i{background:#E8A33D}
 .track{position:relative;height:14px;background:var(--paper);border:2px solid var(--edge);border-radius:99px;margin:22px 8px 8px}.track i{display:block;height:100%;background:linear-gradient(90deg,var(--lilac),var(--blue));border-radius:99px;transition:width .5s}.track .rk{position:absolute;top:-24px;transform:translateX(-50%) rotate(45deg);font-size:26px;transition:left .5s}.wb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;text-align:center}.wb small{font-size:12px;color:var(--soft)}.wb i{display:block;width:70%;background:var(--edge);border-radius:6px 6px 2px 2px}.wb i.on{background:var(--lilac)}
+.avatar.pod{width:100%;max-width:96px;height:96px;object-fit:contain;display:block;margin:0 auto 4px}.avatar.pod.wide{width:100%;max-width:120px;height:74px}.avatar.ph.pod{width:84px;height:84px;font-size:48px}
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:8px;margin:20px 0 8px}.pod{flex:1;max-width:210px;min-width:0;background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;touch-action:manipulation}.pname{font-weight:800;font-size:20px}.ppts{color:var(--soft);font-size:15px;margin-bottom:6px}.step{width:100%;border-radius:14px 14px 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:8px;font-size:30px;font-weight:800;color:#fff;transition:height .4s}
 .avatar.wide{width:92px;height:56px}.avatar.big.wide{width:170px;height:100px}
 .avatar.ph{display:inline-flex;align-items:center;justify-content:center;font-size:34px;background:var(--paper-deep);border-radius:50%;width:56px;height:56px}.avatar.big.ph{width:96px;height:96px;font-size:56px;margin:0 auto 6px}
 .chip.locked{opacity:.55;cursor:default;display:inline-flex;align-items:center}
@@ -242,17 +244,34 @@ function pad2(n){return String(n).padStart(2,"0");}
 function ymd(d){return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate());}
 function mondayOf(off){var d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7)+off*7);return d;}
 var wkOff=0;
-function dayLog(){if(!P.log)P.log={};var d=todayStr();return P.log[d]||(P.log[d]={s:0,n:0,ok:0,w:[],g:0,l:0,m:[]});}
+function dayLog(){if(!P.log)P.log={};var d=todayStr();return P.log[d]||(P.log[d]={s:0,n:0,ok:0,w:[],g:0,l:0,m:[],pt:0});}
+function addPts(n){var L=dayLog();L.pt=(L.pt||0)+n;}
+function weekPts(p,off){var m=mondayOf(off||0),t=0,i;for(i=0;i<7;i++){var d=new Date(m);d.setDate(m.getDate()+i);var L=(p.log||{})[ymd(d)];t+=(L&&L.pt)||0;}return t;}
+function ranking(){
+  var rows=KIDS.map(function(k,i){var p=(kid&&k.id===kid.id&&P)?P:profileData(k);return {k:k,i:i,pts:weekPts(p,0)};});
+  rows.sort(function(a,b){return b.pts-a.pts||a.i-b.i;});
+  var any=rows.some(function(r){return r.pts>0;});
+  rows.forEach(function(r,i){r.place=any?(i>0&&r.pts===rows[i-1].pts?rows[i-1].place:i+1):0;});
+  return {rows:rows,any:any};
+}
+function medal(p){return p===1?"🥇":p===2?"🥈":p===3?"🥉":"";}
+function rankCard(){
+  var R=ranking(),me=R.rows.filter(function(r){return r.k.id===kid.id;})[0];
+  return h("div",{class:"card"},
+    h("div",{class:"row",style:"align-items:center;justify-content:space-between;margin:0;flex-wrap:nowrap"},h("b",null,"🏆 Deine Punkte diese Woche"),h("span",{style:"font-size:28px;font-weight:800"},String(me.pts))),
+    h("p",{style:"margin:6px 0 0"},R.any?medal(me.place)+" Platz "+me.place+" von "+R.rows.length:"Sammle Punkte, dann siehst du hier deinen Platz!"),
+    h("p",{class:"soft",style:"margin:4px 0 0;font-size:15px"},"Punkte gibt es fürs Üben, für neue Sterne und fürs Spielen."));
+}
 function logAns(w,ok,from,to){
-  var L=dayLog();L.n++;if(ok)L.ok++;if(L.w.indexOf(w.en)<0)L.w.push(w.en);
+  var L=dayLog();L.pt=(L.pt||0)+(ok?2:0)+10*Math.max(0,to-from);L.n++;if(ok)L.ok++;if(L.w.indexOf(w.en)<0)L.w.push(w.en);
   if(to>from)L.g+=to-from;if(to<from)L.l+=from-to;
   if(to===5&&from<5&&L.m.indexOf(w.en)<0)L.m.push(w.en);
 }
-var lastAct=0,lastSave=0,sessSec=0,BREAK_S=1200;
+var lastAct=0,lastSave=0;
 function activity(){
   if(!kid||!P||kid.role==="parent"||inGame)return;
   var n=Date.now();
-  if(lastAct){var gap=(n-lastAct)/1000;dayLog().s+=Math.min(gap,60);if(gap>=300)sessSec=0;else sessSec+=Math.min(gap,60);if(n-lastSave>15000){saveP();lastSave=n;}}
+  if(lastAct){var gap=(n-lastAct)/1000;dayLog().s+=Math.min(gap,60);if(n-lastSave>15000){saveP();lastSave=n;}}
   lastAct=n;
 }
 document.addEventListener("pointerdown",activity,true);
@@ -319,13 +338,14 @@ function weekCard(k){
   return h("div",{class:"card"},
     h("div",{class:"row",style:"align-items:center;margin:0 0 6px"},avatar(k),h("h2",{style:"margin:0;flex:1"},k.name),h("b",null,pct+" % gelernt")),
     barEl(pct,"big"),h("p",{class:"soft",style:"margin:4px 0 8px"},five+" von "+WORDS.length+" Wörtern mit 5 Sternen"),
-    p.g&&p.g.run?h("p",{class:"soft",style:"margin:0 0 6px"},"🎮 Jump-and-Run: Rekord "+p.g.run.best+" Punkte, "+p.g.run.plays+" Runden gespielt"):null,
+    (p.g&&(p.g.run||p.g.sudoku))?h("p",{class:"soft",style:"margin:0 0 6px"},(p.g.run?"🎮 Jump-and-Run: Rekord "+p.g.run.best+" Punkte, "+p.g.run.plays+" Runden. ":"")+(p.g.sudoku?"🧩 Sudoku: "+p.g.sudoku.solved+" gelöst.":"")):null,
     h("b",null,"⭐ Wörter nach Sternen"),starRank(p),
     h("p",{style:"margin:14px 0 4px"},h("b",null,"🗓 Lernzeit: "+mins+" min"),", "+st.active+" von 7 Tagen"),
     bars,
-    h("p",{class:"soft",style:"margin:0 0 6px"},"Ziel: "+GOAL_DAYS+" Tage mit je etwa 20 Minuten (das entspricht dem Doppelten des Alters, danach braucht der Kopf eine Pause). Die App schlägt nach rund 20 Minuten am Stück eine Pause vor. Jeder Tag zählt höchstens einmal, ein langer Tag ersetzt keinen anderen."),
+    h("p",{class:"soft",style:"margin:0 0 6px"},"Ziel: "+GOAL_DAYS+" Tage mit je etwa 20 Minuten (das entspricht dem Doppelten des Alters, danach braucht der Kopf eine Pause). Nach jedem zweiten Durchlauf gibt es eine Spielpause. Jeder Tag zählt höchstens einmal, ein langer Tag ersetzt keinen anderen."),
     over.length?h("p",{style:"margin:0 0 6px"},"💪 Mehr als 20 Minuten: ",h("b",null,over.join(", "))," – das zählt als Zusatz (gelber Teil im Balken), ersetzt aber keinen anderen Lerntag."):null,
     h("p",null,r.e+" ",h("b",null,st.gd+" von "+GOAL_DAYS+" Zieltagen"),(wkOff===0?" bisher: ":": "),r.t),
+    h("p",null,"🏆 Punkte in dieser Woche: ",h("b",null,String(weekPts(p,wkOff)))),
     tot.n||tot.s>=30?h("div",null,
       h("div",{class:"stats"},h("div",null,h("b",null,String(nw)),"Wörter geübt"),h("div",null,h("b",null,String(tot.n)),"Antworten"),h("div",null,h("b",null,acc+" %"),"richtig"),h("div",null,h("b",null,"+"+tot.g),"Sterne")),
       tot.l?h("p",{class:"soft",style:"margin:6px 0 0"},"(−"+tot.l+" Sterne bei Fehlern)"):null,
@@ -367,9 +387,26 @@ function mergeP(a,b){
   var o={w:{},err:{},log:{},dip:{},g:{}};
   function keys(x,y){var s={};Object.keys(x||{}).concat(Object.keys(y||{})).forEach(function(k){s[k]=1;});return Object.keys(s);}
   keys(a.w,b.w).forEach(function(x){var ra=(a.w||{})[x],rb=(b.w||{})[x];o.w[x]=!ra?rb:!rb?ra:((rb.t||0)>(ra.t||0)?rb:ra);});
-  keys(a.log,b.log).forEach(function(x){var la=(a.log||{})[x],lb=(b.log||{})[x];o.log[x]=!la?lb:!lb?la:(((lb.n||0)>(la.n||0))||((lb.n||0)===(la.n||0)&&(lb.s||0)>(la.s||0))?lb:la);});
+  keys(a.log,b.log).forEach(function(x){
+    var la=(a.log||{})[x],lb=(b.log||{})[x];
+    if(!la||!lb){o.log[x]=la||lb;return;}
+    var m={};["s","n","ok","g","l","pt"].forEach(function(f){m[f]=Math.max(la[f]||0,lb[f]||0);});
+    m.w=(la.w||[]).concat((lb.w||[]).filter(function(q){return (la.w||[]).indexOf(q)<0;}));
+    m.m=(la.m||[]).concat((lb.m||[]).filter(function(q){return (la.m||[]).indexOf(q)<0;}));
+    o.log[x]=m;
+  });
   keys(a.err,b.err).forEach(function(x){o.err[x]=Math.max((a.err||{})[x]||0,(b.err||{})[x]||0);});
-  keys(a.g,b.g).forEach(function(x){var ga=(a.g||{})[x],gb=(b.g||{})[x];o.g[x]=!ga?gb:!gb?ga:{best:Math.max(ga.best||0,gb.best||0),plays:Math.max(ga.plays||0,gb.plays||0)};});
+  keys(a.g,b.g).forEach(function(x){
+    var ga=(a.g||{})[x],gb=(b.g||{})[x];
+    if(!ga||!gb){o.g[x]=ga||gb;return;}
+    var m={};
+    Object.keys(ga).concat(Object.keys(gb)).forEach(function(f){
+      var va=ga[f]||0,vb=gb[f]||0;
+      m[f]=f==="fast"?((va&&vb)?Math.min(va,vb):(va||vb)):Math.max(va,vb);
+    });
+    o.g[x]=m;
+  });
+  if(a.rc||b.rc){var ra=a.rc||{d:"",n:0},rb=b.rc||{d:"",n:0};o.rc=ra.d>rb.d?ra:rb.d>ra.d?rb:{d:ra.d,n:Math.max(ra.n||0,rb.n||0)};}
   keys(a.dip,b.dip).forEach(function(x){var da=(a.dip||{})[x],db=(b.dip||{})[x];o.dip[x]=!da?db:!db?da:(da<db?da:db);});
   return o;
 }
@@ -382,10 +419,10 @@ function pushProfile(k,keep){
 }
 function schedulePush(){
   dirty=true;
-  if(!fam()||!kid||kid.role==="parent"||pt)return;
-  pt=setTimeout(function(){pt=null;if(dirty&&kid&&kid.role!=="parent"){dirty=false;pushProfile(kid);}},20000);
+  if(!fam()||!kid||pt)return;
+  pt=setTimeout(function(){pt=null;if(dirty&&kid){dirty=false;pushProfile(kid);}},20000);
 }
-function flush(){if(dirty&&fam()&&kid&&kid.role!=="parent"){dirty=false;pushProfile(kid,true);}}
+function flush(){if(dirty&&fam()&&kid){dirty=false;pushProfile(kid,true);}}
 function pullAll(){
   if(!fam())return Promise.resolve(false);
   return fetch(fsBase()+"?pageSize=100&key="+FB.key).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json();}).then(function(j){
@@ -604,25 +641,8 @@ function testSetup(pool,label){
     h("div",{class:"card"},pic("kaninchen-test","small"),h("p",null,label),h("p",{class:"soft"},"Du bekommst bunt gemischte Wörter, mal nur das deutsche Wort, mal nur zum Hören – ohne Hilfe. So sieht man, was wirklich sitzt. Falsche Wörter verlieren Sterne, damit sie bald wiederkommen."),
       h("h2",null,"Wie viele Wörter?"),h("div",{class:"row"},opts.map(function(n){return h("button",{class:"btn primary",onclick:function(){startTest(pool,n);}},n===pool.length&&opts.length>1?"Alle ("+n+")":String(n));}))));
 }
-var BREAK_WAIT_MS=300000;
-function showCountdownBreak(){
-  var end=Date.now()+BREAK_WAIT_MS,timer=null;
-  var left=h("div",{style:"font-size:46px;font-weight:800;margin:6px 0"},"5:00");
-  var go=h("button",{class:"btn primary",disabled:true,onclick:function(){clearInterval(timer);sessSec=0;next();}},"Weiter üben");
-  function tick(){
-    var ms=Math.max(0,end-Date.now()),m=Math.floor(ms/60000),sec=Math.floor(ms%60000/1000);
-    left.textContent=m+":"+String(sec).padStart(2,"0");
-    if(ms<=0){clearInterval(timer);go.disabled=false;left.textContent="Weiter geht’s! 🎉";}
-  }
-  timer=setInterval(tick,1000);
-  mount(h("div",{class:"card center"},pic("kaninchen-schlaeft"),h("h2",null,"Zeit für eine kleine Pause! 🌿"),
-    h("p",null,"Du hast richtig lange konzentriert geübt – das war stark. Steh kurz auf, trink einen Schluck und beweg dich ein bisschen. Danach geht es mit frischem Kopf weiter."),
-    left,
-    h("div",{class:"row",style:"justify-content:center"},go,h("button",{class:"btn",onclick:function(){clearInterval(timer);sessSec=0;summary();}},"Für heute Schluss"))));
-}
 function next(){
   if(!S.queue.length){summary();return;}
-  if(sessSec>=BREAK_S){showBreak();return;}
   if(S.test){var itT=S.queue.shift(),fT=function(res){afterTest(itT,res);};if(Math.random()<0.65)exMeister(itT.w,fT);else exTyped(itT.w,5,fT);return;}
   var it=S.queue.shift(),r=rec(it.w),stage=r.s;
   if(stage>=8)stage=[5,6,7][Math.floor(Math.random()*3)];
@@ -678,6 +698,7 @@ function correction(w,typed,cont){
 function summary(){
   if(S.test){testSummary();return;}
   var nd=checkDip();
+  if(!S.counted&&S.done>=8){S.counted=true;var dd=todayStr();if(!P.rc||P.rc.d!==dd)P.rc={d:dd,n:0};P.rc.n++;S.rn=P.rc.n;saveP();}
   var tot=S.ok+S.bad,ratio=tot?S.ok/tot:0,stars=ratio>=0.9?3:ratio>=0.7?2:1;
   var errs=Object.keys(S.errs).sort(function(a,b){return S.errs[b]-S.errs[a];});
   mount(h('div',{class:'card center'},h('h1',null,'Geschafft! '+'⭐'.repeat(stars)),pic('ergebnis-'+band(Math.round(ratio*100))),
@@ -713,7 +734,7 @@ function playRun(done,startT){
   loadScript("spiel-run.js",function(){
     window.HoppelRun.start(box,{best:best,startT:startT||0,onEnd:function(r){
       var G=gameStats(),R=G.run||(G.run={best:0,plays:0});
-      R.plays++;if(r.score>R.best)R.best=r.score;saveP();
+      R.plays++;if(r.score>R.best)R.best=r.score;addPts(Math.floor(r.score/10));saveP();
       box.replaceChildren(h("div",{class:"card center"},
         pic(r.newRecord&&best>0?"ergebnis-5":"kaninchen-winkt","hero"),
         h("h2",null,r.newRecord&&best>0?"Neuer Rekord! 🏆":"Geschafft!"),
@@ -723,7 +744,27 @@ function playRun(done,startT){
     }});
   },function(){end();box.textContent="Das Spiel konnte nicht geladen werden.";setTimeout(done,1500);});
 }
-var GAMES=[{id:"run",emoji:"🏃",name:"Jump-and-Run",text:"ein bisschen Action",play:playRun}];
+function playSudoku(done){
+  inGame=true;lastAct=0;
+  var box=h("div"),SD=(P.g||{}).sudoku||{solved:0,fast:0};
+  function end(){inGame=false;lastAct=0;}
+  mount(h("div",{class:"top"},h("h1",{style:"flex:1;margin:0"},"🧩 Sudoku")),
+    h("p",{class:"soft",style:"margin:0 0 8px"},"Jede Zahl von 1 bis 6 kommt in jeder Zeile, jeder Spalte und jedem Kästchen genau einmal."),box);
+  var level=SD.solved<2?20:SD.solved<5?18:SD.solved<9?16:14;
+  loadScript("spiel-sudoku.js",function(){
+    window.HoppelSudoku.start(box,{givens:level,onEnd:function(r){
+      if(!r.solved){end();done();return;}
+      var G=gameStats(),S2=G.sudoku||(G.sudoku={solved:0,fast:0});
+      S2.solved++;var neu=!S2.fast||r.seconds<S2.fast;if(neu)S2.fast=r.seconds;addPts(60);saveP();
+      box.replaceChildren(h("div",{class:"card center"},pic(neu&&S2.solved>1?"ergebnis-5":"kaninchen-winkt","hero"),
+        h("h2",null,neu&&S2.solved>1?"Neue Bestzeit! 🏆":"Gelöst! 🎉"),
+        h("p",null,h("b",null,Math.floor(r.seconds/60)+":"+String(r.seconds%60).padStart(2,"0")+" Minuten"),r.hints?" · "+r.hints+" Tipp(s) genutzt":" · ohne Tipp"),
+        h("p",{class:"soft"},S2.solved+" Rätsel gelöst · schnellste Zeit "+Math.floor(S2.fast/60)+":"+String(S2.fast%60).padStart(2,"0")),
+        h("button",{class:"btn primary big",onclick:function(){end();done();}},"Weiter")));
+    }});
+  },function(){end();box.textContent="Das Spiel konnte nicht geladen werden.";setTimeout(done,1500);});
+}
+var GAMES=[{id:"run",emoji:"🏃",name:"Jump-and-Run",text:"ein bisschen Action (3 Leben)",play:playRun},{id:"sudoku",emoji:"🧩",name:"Sudoku",text:"ein bisschen Denken",play:playSudoku}];
 function gameMenu(title,text,done,extra){
   mount(h("div",{class:"card center"},pic("kaninchen-winkt","hero"),h("h2",null,title),h("p",null,text),
     h("div",{class:"row",style:"justify-content:center"},
@@ -731,16 +772,11 @@ function gameMenu(title,text,done,extra){
       extra||null)));
 }
 function rewardEl(){
-  if(!S||S.test||S.done<8||S.rewarded||!gamesOn())return null;
-  return h("div",{class:"fb ok"},h("h2",{style:"margin-top:0"},"🎮 Spielrunde verdient!"),
-    h("p",null,"Du hast fleißig geübt. Zur Belohnung darfst du jetzt eine Runde spielen."),
-    h("button",{class:"btn primary",onclick:function(){S.rewarded=true;gameMenu("Was möchtest du spielen?","Heute Lust auf ein bisschen Action?",function(){summary();});}},"🎮 Jetzt spielen"));
-}
-function showBreak(){
-  if(!gamesOn()){showCountdownBreak();return;}
-  gameMenu("Zeit für eine Spielpause! 🌿","Du hast richtig lange konzentriert geübt. Jetzt darf der Lernkopf sich ausruhen: Spiel eine Runde, danach geht es frisch weiter.",
-    function(){sessSec=0;next();},
-    h("button",{class:"btn",onclick:function(){sessSec=0;summary();}},"Für heute Schluss"));
+  if(!S||S.test||!S.rn||S.rewarded||!gamesOn())return null;
+  if(S.rn%2!==0)return h("p",{class:"soft"},"🎮 Nach dem nächsten Durchlauf darfst du spielen!");
+  return h("div",{class:"fb ok"},h("h2",{style:"margin-top:0"},"🎮 Spielzeit verdient!"),
+    h("p",null,"Zwei Durchläufe geschafft – das war richtig fleißig. Jetzt darfst du dir ein Spiel aussuchen."),
+    h("button",{class:"btn primary",onclick:function(){S.rewarded=true;gameMenu("Was möchtest du spielen?","Heute lieber ein bisschen Action oder ein bisschen Denken?",function(){summary();});}},"🎮 Jetzt aussuchen"));
 }
 
 /* ---------- Eingabe-Bausteine ---------- */
@@ -944,10 +980,18 @@ function exMeister(w,fin){
 }
 
 /* ---------- Oberfläche ---------- */
+function pickKid(k){kid=k;try{localStorage.setItem('vt:currentKid',k.id);}catch(e){}loadP();home();}
 function selectKid(){
   busy=false;view="select";
-  mount(h('h1',null,'✏️ Vokabeltrainer'),h('p',{class:'soft'},'Wer übt heute?'),
-    h('div',{class:'kids'},KIDS.map(function(k){return h('button',{class:'kid',style:'background:'+(k.color||'#8B6FC4'),onclick:function(){kid=k;try{localStorage.setItem('vt:currentKid',k.id);}catch(e){}loadP();home();}},avatar(k,'big'),k.name);})),
+  var R=ranking(),rows=R.rows,slots=!R.any?rows.slice().sort(function(x,y){return x.i-y.i;}):rows.length>=3?[rows[1],rows[0],rows[2]].concat(rows.slice(3)):rows;
+  var pod=h('div',{class:'podium'},slots.map(function(r){
+    var pl=r.place,hgt=R.any?(pl===1?120:pl===2?90:64):80,col=!R.any?'#8B6FC4':pl===1?'#E8A33D':pl===2?'#A9AEC4':'#C98A5A';
+    return h('button',{class:'pod',onclick:function(){pickKid(r.k);}},avatar(r.k,'pod'),h('div',{class:'pname'},r.k.name),h('div',{class:'ppts'},r.pts+' Punkte'),
+      h('div',{class:'step',style:'height:'+hgt+'px;background:'+col},R.any?medal(pl)+' '+pl:'🌟'));
+  }));
+  mount(h('h1',null,'✏️ Vokabeltrainer'),
+    h('p',{class:'soft'},R.any?'Das Podest dieser Woche. Tippe auf dich, um zu üben!':'Sammelt diese Woche Punkte, wer steht am Ende oben? Tippe auf dich, um zu starten!'),
+    pod,
     fam()?null:h('p',{class:'center'},h('button',{class:'btn small',onclick:connectScreen},'🔗 Mit Familie verbinden')));
 }
 function stat(){
@@ -989,13 +1033,14 @@ function home(noPull){
       h('h2',{style:'margin-top:4px'},'📈 So lernen die Kinder'),
       fam()?null:h('div',{class:'note'},'Hier steht nur, was auf diesem Gerät geübt wurde. Unter ⚙️ Einstellungen verbindest du die Geräte der Kinder mit der Familie, dann siehst du alles an einer Stelle.'),
       weekBlock(home),
+      rankCard(),
       h('h2',null,'🐰 Selbst üben und testen'),
       h('p',{class:'soft',style:'margin-top:0'},'Euer eigener Übungsbereich. Euer Fortschritt zählt hier nicht in die Wochenübersicht der Kinder.'),
       h('div',{class:'card'},h('b',null,'🎮 Spiele zum Ausprobieren'),h('p',{class:'soft',style:'margin:4px 0 10px'},'Hier könnt ihr die Spiele jederzeit spielen, auch ohne Belohnung. Bei den Kindern gibt es sie als Belohnung nach dem Üben.'),
         h('div',{class:'row',style:'align-items:center'},h('label',{class:'soft'},'Start: '),startSel,GAMES.map(function(gm){return h('button',{class:'btn primary',onclick:function(){gm.play(function(){home(true);},+startSel.value);}},gm.emoji+' '+gm.name);}))),
       practice);
   }else{
-    mount(head,pic('kaninchen-winkt','hero'),weekKidCard(),practice);
+    mount(head,pic('kaninchen-winkt','hero'),weekKidCard(),rankCard(),practice);
   }
 }
 var fMin=0,fMax=5;
@@ -1039,7 +1084,7 @@ function settings(noPull){
   mic.addEventListener('change',function(){try{localStorage.setItem('vt:mic',mic.checked?'1':'0');}catch(e){}});
   mount(h('div',{class:'top'},h('h1',{style:'flex:1;margin:0'},'⚙️ Einstellungen'),h('button',{class:'btn small',onclick:function(){home();}},'Zurück')),
     familyCard(),
-    h('div',{class:'card'},h('h2',{style:'margin-top:0'},'🎮 Spiele'),h('label',{class:'row'},gmBox,h('span',null,'Spiele als Belohnung und Spielpause anbieten')),h('p',{class:'soft'},'Nach jeder Übungsrunde gibt es eine Spielrunde, nach etwa 20 Minuten am Stück eine Spielpause. Die Runde endet von selbst, wenn die 3 Leben weg sind. Die Spielzeit zählt nicht als Lernzeit. Die Einstellung gilt nur für dieses Gerät.')),
+    h('div',{class:'card'},h('h2',{style:'margin-top:0'},'🎮 Spiele'),h('label',{class:'row'},gmBox,h('span',null,'Spiele als Belohnung und Spielpause anbieten')),h('p',{class:'soft'},'Nach jedem zweiten Übungsdurchlauf darf das Kind wählen: Jump-and-Run (3 Leben) oder ein Sudoku. Die Spielzeit zählt nicht als Lernzeit. Punkte fürs Spielen zählen für die Wochenwertung. Die Einstellung gilt nur für dieses Gerät.')),
     h('div',{class:'card'},h('h2',{style:'margin-top:0'},'Buchstabieren per Mikrofon'),
       SR?h('label',{class:'row'},mic,h('span',null,'Mikrofon in Stufe 6 anbieten')):h('p',null,'Dieser Browser unterstützt keine Spracherkennung. Stufe 6 läuft über die Buchstaben-Tasten.'),
       h('p',{class:'soft'},'Hinweis: Bei eingeschaltetem Mikrofon wird die Sprache vom Browser an einen Online-Dienst (Google bzw. Apple) zur Erkennung geschickt. Bitte nur einschalten, wenn das für euch in Ordnung ist. Ohne Mikrofon sagen die Kinder die Buchstaben laut und tippen sie an.')),
