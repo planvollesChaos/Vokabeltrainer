@@ -25,11 +25,11 @@ Eine einzige `index.html`, keine Abhängigkeiten, läuft im Browser und speicher
   Regeln: `firestore.rules`. Zusammenführen pro Wort nach Zeitstempel (`t`), mehrere Geräte pro Kind sind möglich.
 
 ## Spiele, Podeste und Ampel
-- Nach jedem **zweiten** Übungsdurchlauf (ab 8 Antworten, gezählt pro Tag) darf das Kind wählen: **Jump-and-Run** (3 Leben) oder **Sudoku**. Nach dem ersten Durchlauf steht ein Hinweis. Keine Pause mitten im Durchlauf. Spielzeit zählt nicht als Lernzeit. Eltern können die Spiele ausschalten (nur dieses Gerät).
+- Nach einem Übungsdurchlauf (ab 8 Antworten, gezählt pro Tag) darf das Kind **mehrere Spiele** wählen (je **Jump-and-Run** mit 3 Leben oder **Sudoku**). Einstellbar im Eltern-Bereich für die ganze Familie (`cfg` im Eltern-Profil, wird abgeglichen): nach jedem **1.** oder jedem **2.** Durchlauf, 1–5 Spiele je Belohnung. Aktuell (Ferien): nach jedem Durchlauf, 3 Spiele. Keine Pause mitten im Durchlauf. Spielzeit zählt nicht als Lernzeit. Eltern können die Spiele ausschalten (nur dieses Gerät).
 - **Jump-and-Run** (`spiel-run.js`): Tippen/Pfeil hoch = springen, 2× = Doppelsprung, nach unten wischen/Pfeil runter = ducken, 2× schnell nach oben wischen/Leertaste 2× = Möhre ziehen. Rekord = weiteste Strecke in Metern (`g.run.bm`). Läuft als **Vollseiten-Overlay** ohne Seiten-Scroll (bewusst ohne echten Browser-Vollbildmodus, weil Chrome dabei eine graue Hinweisleiste einblendet); hochkant erscheint ein Dreh-Hinweis, „Lieber hochkant spielen“ ist möglich, rotes ✕ oben links beendet. Skripte werden mit Versionsnummer (`APPV`) geladen, damit Browser keine veralteten Dateien nutzen; bei jeder Änderung `APPV` erhöhen. Karotten werden nicht in oder hinter Tunnel und Riesenmöhre erzeugt.
 - **Sudoku** (`spiel-sudoku.js`): klein 6×6 oder groß 9×9, eindeutig lösbar, bis 3 Tipps (je 30 s Strafzeit). Bestzeit je Größe (`g.sd6.fast`, `g.sd9.fast`).
 - **Profilwahl:** Kacheln mit **Lernzeit-Ampel** (grün/orange/rot nach Tempo zum Wochenziel 4 Tage × 20 Min, mit Zähler „An x Tagen gelernt · y von 80 Min“) und zwei **Spiele-Podeste** (weitester Lauf, schnellstes Sudoku). Lernstände der Wörter sieht man bei den anderen nicht.
-- **Eltern-Code:** Das Eltern-Profil ist mit einem 4-stelligen Code gesperrt (Standard 0000, im Eltern-Bereich änderbar, gilt je Gerät) und wird nie automatisch angemeldet. Die Spiele der Eltern liegen dahinter.
+- **Eltern-Code:** Das Eltern-Profil ist mit einem 4-stelligen Code gesperrt (Standard 4444, im Eltern-Bereich änderbar, gilt je Gerät; nach 3 Fehlversuchen kurze Sperre, wird länger) und wird nie automatisch angemeldet. Die Spiele der Eltern liegen dahinter.
 
 ## Aussprache
 Vorab erzeugte britische MP3s in `audio/` (Google Cloud TTS, en-GB-Neural2-A): normal (Tempo 0,95),

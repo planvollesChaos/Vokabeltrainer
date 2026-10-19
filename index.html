@@ -407,6 +407,7 @@ function mergeP(a,b){
     o.g[x]=m;
   });
   Object.keys(o.g).forEach(function(x){if(o.g[x]&&(o.g[x].t||0)<=(o.gz[x]||0))delete o.g[x];});
+  if(a.cfg||b.cfg){var ca=a.cfg,cb=b.cfg;o.cfg=!ca?cb:!cb?ca:((cb.t||0)>(ca.t||0)?cb:ca);}
   if(a.rc||b.rc){var ra=a.rc||{d:"",n:0},rb=b.rc||{d:"",n:0};o.rc=ra.d>rb.d?ra:rb.d>ra.d?rb:{d:ra.d,n:Math.max(ra.n||0,rb.n||0)};}
   keys(a.dip,b.dip).forEach(function(x){var da=(a.dip||{})[x],db=(b.dip||{})[x];o.dip[x]=!da?db:!db?da:(da<db?da:db);});
   return o;
@@ -711,8 +712,12 @@ function summary(){
 
 /* ---------- Spiele (Belohnung nach der Runde und Spielpause) ---------- */
 var inGame=false;
+function cfg(){
+  var par=KIDS.filter(function(k){return k.role==="parent";})[0],p=par?((kid&&kid.id===par.id&&P)?P:profileData(par)):null,c=(p&&p.cfg)||{};
+  return {ev:c.ev===2?2:1,n:c.n>=1&&c.n<=5?c.n:3};
+}
 function gamesOn(){try{return localStorage.getItem("vt:games")!=="0";}catch(e){return true;}}
-var APPV="2026-10-19-5";
+var APPV="2026-10-20-1";
 function loadScript(src,ok,fail){
   window.__ls=window.__ls||{};
   if(window.__ls[src]){ok();return;}
@@ -807,12 +812,19 @@ function gameMenu(title,text,done,extra){
       GAMES.map(function(gm){return h("button",{class:"btn primary",onclick:function(){gm.play(done,{back:function(){gameMenu(title,text,done,extra);}});}},gm.emoji+" "+gm.name+" – "+gm.text);}),
       extra||null)));
 }
+function playsMenu(){
+  if(S.plays<=0){summary();return;}
+  gameMenu("Was möchtest du spielen?","Noch "+S.plays+" "+(S.plays===1?"Spiel":"Spiele")+". Heute lieber ein bisschen Action oder ein bisschen Denken?",
+    function(){S.plays--;playsMenu();},
+    h("button",{class:"btn",onclick:function(){S.plays=0;summary();}},"Fertig, weiter lernen"));
+}
 function rewardEl(){
   if(!S||S.test||!S.rn||S.rewarded||!gamesOn())return null;
-  if(S.rn%2!==0)return h("p",{class:"soft"},"🎮 Nach dem nächsten Durchlauf darfst du spielen!");
+  var c=cfg();
+  if(S.rn%c.ev!==0)return h("p",{class:"soft"},"🎮 Nach dem nächsten Durchlauf darfst du spielen!");
   return h("div",{class:"fb ok"},h("h2",{style:"margin-top:0"},"🎮 Spielzeit verdient!"),
-    h("p",null,"Zwei Durchläufe geschafft – das war richtig fleißig. Jetzt darfst du dir ein Spiel aussuchen."),
-    h("button",{class:"btn primary",onclick:function(){S.rewarded=true;gameMenu("Was möchtest du spielen?","Heute lieber ein bisschen Action oder ein bisschen Denken?",function(){summary();});}},"🎮 Jetzt aussuchen"));
+    h("p",null,(c.ev===1?"Durchlauf geschafft":"Zwei Durchläufe geschafft")+" – das war richtig fleißig. Jetzt darfst du "+c.n+" "+(c.n===1?"Spiel":"Spiele")+" spielen (beim Jump-and-Run mit je 3 Leben)."),
+    h("button",{class:"btn primary",onclick:function(){S.rewarded=true;S.plays=c.n;playsMenu();}},"🎮 Jetzt aussuchen"));
 }
 
 /* ---------- Eingabe-Bausteine ---------- */
@@ -1016,16 +1028,21 @@ function exMeister(w,fin){
 }
 
 /* ---------- Oberfläche ---------- */
-function pinCode(){try{return localStorage.getItem("vt:pin")||"0000";}catch(e){return "0000";}}
+function pinCode(){try{return localStorage.getItem("vt:pin")||"4444";}catch(e){return "4444";}}
+function pinWait(){try{return Math.max(0,Math.ceil((+(localStorage.getItem("vt:pinlock")||0)-Date.now())/1000));}catch(e){return 0;}}
+function pinFail(){try{var n=(+(localStorage.getItem("vt:pinfail")||0))+1;localStorage.setItem("vt:pinfail",String(n));if(n>=3){var sec=Math.min(900,60*Math.pow(2,n-3));localStorage.setItem("vt:pinlock",String(Date.now()+sec*1000));}return n;}catch(e){return 0;}}
+function pinOk(){try{localStorage.removeItem("vt:pinfail");localStorage.removeItem("vt:pinlock");}catch(e){}}
 function pinScreen(onOk){
   var val="",dots=h("div",{class:"pindots"}),msg=h("div",{class:"msg"});
   function draw(){dots.replaceChildren();for(var i=0;i<4;i++)dots.append(h("span",{class:i<val.length?"on":""}));}
   function off(){document.removeEventListener("keydown",key);}
   function press(d){
+    var w=pinWait();
+    if(w>0){msg.textContent="Zu viele Versuche. Bitte warte noch "+w+" Sekunden.";msg.className="msg bad";return;}
     if(val.length>=4)return;val+=d;draw();
     if(val.length===4){
-      if(val===pinCode()){off();onOk();}
-      else{msg.textContent="Falscher Code";msg.className="msg bad";shake(dots);setTimeout(function(){val="";draw();},300);}
+      if(val===pinCode()){pinOk();off();onOk();}
+      else{pinFail();var w2=pinWait();msg.textContent=w2>0?"Falscher Code. Bitte warte "+w2+" Sekunden.":"Falscher Code";msg.className="msg bad";shake(dots);setTimeout(function(){val="";draw();},300);}
     }
   }
   function key(e){if(e.key>="0"&&e.key<="9")press(e.key);else if(e.key==="Backspace"){val=val.slice(0,-1);draw();}}
@@ -1125,7 +1142,7 @@ function resetCard(){
 function pinCard(){
   var a=h("input",{class:"plain",type:"password",inputmode:"numeric",maxlength:"4",placeholder:"Neuer Code (4 Ziffern)",autocomplete:"off"}),msg=h("div",{class:"msg"});
   return h("div",{class:"card"},h("h2",{style:"margin-top:0"},"🔒 Eltern-Code"),
-    h("p",{class:"soft"},"Der Code schützt das Eltern-Profil (und damit die Spiele dort). Standard ist 0000, bitte ändere ihn. Er gilt nur für dieses Gerät."),
+    h("p",{class:"soft"},"Der Code schützt das Eltern-Profil (und damit die Spiele dort). Standard ist 4444, bitte ändere ihn. Nach drei falschen Eingaben ist der Code kurz gesperrt. Er gilt nur für dieses Gerät."),
     h("div",{class:"row"},a,h("button",{class:"btn primary",onclick:function(){
       if(!/^\d{4}$/.test(a.value)){msg.textContent="Bitte genau 4 Ziffern.";msg.className="msg bad";return;}
       try{localStorage.setItem("vt:pin",a.value);}catch(e){}
@@ -1216,6 +1233,10 @@ function settings(noPull){
   var msg=h('div',{class:'msg'}),lmsg=h('div',{class:'msg'});
   var lst=h('textarea',{class:'plain',rows:'6',style:'width:100%;font:inherit',autocapitalize:'off',spellcheck:'false',placeholder:'friend = der Freund\nschool = die Schule'});
   var ltp=h('input',{class:'plain',type:'text',placeholder:'Thema für diese Wörter',value:'Weitere Wörter'});
+  var cf=cfg(),evSel=h('select',{class:'plain',style:'flex:none;font:inherit'},h('option',{value:'1',selected:cf.ev===1},'nach jedem Durchlauf'),h('option',{value:'2',selected:cf.ev===2},'nach jedem zweiten Durchlauf'));
+  var nSel=h('select',{class:'plain',style:'flex:none;font:inherit'},[1,2,3,4,5].map(function(n){return h('option',{value:String(n),selected:cf.n===n},n+(n===1?' Spiel':' Spiele'));}));
+  function saveCfg(){P.cfg={ev:+evSel.value,n:+nSel.value,t:Date.now()};saveP();}
+  evSel.addEventListener('change',saveCfg);nSel.addEventListener('change',saveCfg);
   var gmBox=h('input',{type:'checkbox',style:'width:24px;height:24px'});gmBox.checked=gamesOn();gmBox.addEventListener('change',function(){try{localStorage.setItem('vt:games',gmBox.checked?'1':'0');}catch(e){}});
   var mic=h('input',{type:'checkbox',style:'width:24px;height:24px'});mic.checked=localStorage.getItem('vt:mic')==='1';
   mic.addEventListener('change',function(){try{localStorage.setItem('vt:mic',mic.checked?'1':'0');}catch(e){}});
@@ -1223,7 +1244,8 @@ function settings(noPull){
     familyCard(),
     pinCard(),
     resetCard(),
-    h('div',{class:'card'},h('h2',{style:'margin-top:0'},'🎮 Spiele'),h('label',{class:'row'},gmBox,h('span',null,'Spiele als Belohnung und Spielpause anbieten')),h('p',{class:'soft'},'Nach jedem zweiten Übungsdurchlauf darf das Kind wählen: Jump-and-Run (3 Leben) oder ein Sudoku (klein 6×6 oder groß 9×9). Die Spielzeit zählt nicht als Lernzeit. Der weiteste Lauf und die schnellste Sudoku-Zeit stehen auf den Podesten der Profilwahl. Die Einstellung gilt nur für dieses Gerät.')),
+    h('div',{class:'card'},h('h2',{style:'margin-top:0'},'🎮 Spiele'),h('label',{class:'row'},gmBox,h('span',null,'Spiele als Belohnung anbieten')),
+      h('div',{class:'row',style:'align-items:center'},h('span',null,'Spielen darf man'),evSel,h('span',null,'–'),nSel,h('span',null,'(Jump-and-Run: je 3 Leben)')),h('p',{class:'soft'},'Nach einem Übungsdurchlauf (oder jedem zweiten, je nach Einstellung) darf das Kind mehrere Spiele wählen, jeweils Jump-and-Run oder ein Sudoku (klein 6×6 oder groß 9×9). Die Einstellung gilt für alle Geräte der Familie, sobald sie abgeglichen sind. Die Spielzeit zählt nicht als Lernzeit. Der weiteste Lauf und die schnellste Sudoku-Zeit stehen auf den Podesten der Profilwahl. Nur das Ein- und Ausschalten gilt für dieses Gerät.')),
     h('div',{class:'card'},h('h2',{style:'margin-top:0'},'Buchstabieren per Mikrofon'),
       SR?h('label',{class:'row'},mic,h('span',null,'Mikrofon in Stufe 6 anbieten')):h('p',null,'Dieser Browser unterstützt keine Spracherkennung. Stufe 6 läuft über die Buchstaben-Tasten.'),
       h('p',{class:'soft'},'Hinweis: Bei eingeschaltetem Mikrofon wird die Sprache vom Browser an einen Online-Dienst (Google bzw. Apple) zur Erkennung geschickt. Bitte nur einschalten, wenn das für euch in Ordnung ist. Ohne Mikrofon sagen die Kinder die Buchstaben laut und tippen sie an.')),
