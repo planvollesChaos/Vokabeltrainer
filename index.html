@@ -157,7 +157,9 @@ var app=document.getElementById('app');
 function h(tag,a){var e=document.createElement(tag);if(a)for(var k in a){var v=a[k];if(k==='class')e.className=v;else if(k==='html')e.innerHTML=v;else if(k.indexOf('on')===0)e.addEventListener(k.slice(2),v);else if(v===true)e.setAttribute(k,'');else if(v!==false&&v!=null)e.setAttribute(k,v);}
   for(var i=2;i<arguments.length;i++)add(e,arguments[i]);return e;}
 function add(e,x){if(x==null||x===false)return;if(Array.isArray(x))x.forEach(function(y){add(e,y);});else e.append(x.nodeType?x:document.createTextNode(String(x)));}
-function mount(){app.replaceChildren();for(var i=0;i<arguments.length;i++)add(app,arguments[i]);window.scrollTo(0,0);}
+var keepY=null;
+function stay(fn){keepY=window.scrollY;try{fn();}finally{keepY=null;}}
+function mount(){app.replaceChildren();for(var i=0;i<arguments.length;i++)add(app,arguments[i]);if(keepY!==null){window.scrollTo(0,keepY);}else window.scrollTo(0,0);}
 function lj(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v;}catch(e){return d;}}
 function sj(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
@@ -353,9 +355,9 @@ function weekBlock(re){
   var kids=KIDS.filter(function(k){return k.role!=="parent";});
   return h("div",null,
     h("div",{class:"row",style:"align-items:center;justify-content:space-between;flex-wrap:nowrap"},
-      h("button",{class:"btn small",onclick:function(){wkOff--;re(true);}},"◀"),
+      h("button",{class:"btn small",onclick:function(){stay(function(){wkOff--;re(true);});}},"◀"),
       h("b",null,wkOff===0?"Diese Woche · "+lab:lab),
-      h("button",{class:"btn small",disabled:wkOff>=0,onclick:function(){wkOff++;re(true);}},"▶")),
+      h("button",{class:"btn small",disabled:wkOff>=0,onclick:function(){stay(function(){wkOff++;re(true);});}},"▶")),
     kids.map(weekCard));
 }
 
@@ -434,7 +436,7 @@ function pullAll(){
 function initSync(){
   if(!fam())return;
   pullAll().then(function(ch){if(!ch||busy)return;
-    if(view==="select")selectKid();else if(view==="home"){if(kid)home();else selectKid();}});
+    stay(function(){if(view==="select")selectKid();else if(view==="home"){if(kid)home(true);else selectKid();}});});
 }
 window.addEventListener("online",function(){pullAll();});
 function genCode(){var a="abcdefghijkmnpqrstuvwxyz23456789",b=new Uint8Array(24),s="",i;crypto.getRandomValues(b);for(i=0;i<24;i++)s+=a[b[i]%a.length];return s;}
@@ -476,7 +478,7 @@ function familyCard(){
   return h("div",{class:"card"},h("h2",{style:"margin-top:0"},"👨‍👩‍👧 Familie & Geräte"),
     h("p",null,err?"⚠️ Abgleich fehlgeschlagen ("+err+")":at?"✓ Verbunden · zuletzt abgeglichen "+new Date(at).toLocaleString("de-DE",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"Verbunden"),
     h("div",{class:"row"},
-      h("button",{class:"btn",onclick:function(){msg.textContent="Gleiche ab …";pullAll().then(function(){settings(true);});}},"🔄 Jetzt abgleichen"),
+      h("button",{class:"btn",onclick:function(){msg.textContent="Gleiche ab …";pullAll().then(function(){stay(function(){settings(true);});});}},"🔄 Jetzt abgleichen"),
       h("button",{class:"btn primary",onclick:function(){shareFam(msg);}},"📤 Link teilen"),
       h("button",{class:"btn",onclick:function(){copyText(FAM_TXT+"\n"+famLink(),msg);}},"📋 Nachricht kopieren"),
       h("button",{class:"btn",onclick:function(){showQR(qrBox);}},"▣ QR-Code zeigen")),
@@ -1040,7 +1042,7 @@ function podiumCard(title,kind,better,fmt,extra){
 var sdSize="sd6";
 function podia(){
   var chips=h("div",{class:"chips",style:"margin:8px 0 0"},[["sd6","Klein 6×6"],["sd9","Groß 9×9"]].map(function(x){
-    return h("button",{class:"chip"+(sdSize===x[0]?" on":""),onclick:function(){sdSize=x[0];if(view==="select")selectKid();}},x[1]);}));
+    return h("button",{class:"chip"+(sdSize===x[0]?" on":""),onclick:function(){stay(function(){sdSize=x[0];if(view==="select")selectKid();});}},x[1]);}));
   return h("div",null,h("h2",null,"🏆 Spiele-Podeste"),
     podiumCard("🏃 Jump-and-Run – wer ist am weitesten gekommen?","run","high",function(v){return v+" m";}),
     podiumCard("🧩 Sudoku – wer war am schnellsten?",sdSize,"low",fmtT,chips));
@@ -1071,7 +1073,6 @@ function selectKid(){
   busy=false;view="select";
   mount(h("h1",null,"✏️ Vokabeltrainer"),h("p",{class:"soft"},"Wer übt heute? Tippe auf dein Häschen."),
     KIDS.map(ptile),
-    h("p",{class:"soft",style:"font-size:15px"},"Ampel: 🟢 im Plan · 🟠 noch etwas Luft · 🔴 Zeit zum Üben. Gezählt werden höchstens 20 Minuten pro Tag, das Ziel sind 80 Minuten pro Woche."),
     podia(),
     fam()?null:h("p",{class:"center"},h("button",{class:"btn small",onclick:connectScreen},"🔗 Mit Familie verbinden")));
 }
@@ -1096,14 +1097,14 @@ function home(noPull){
   busy=false;view='home';
   if(!kid){selectKid();return;}
   var parent=kid.role==='parent';
-  if(parent&&noPull!==true&&fam())pullAll().then(function(ch){if(ch&&view==='home'&&kid&&kid.role==='parent'&&!busy)home(true);});
+  if(parent&&noPull!==true&&fam())pullAll().then(function(ch){if(ch&&view==='home'&&kid&&kid.role==='parent'&&!busy)stay(function(){home(true);});});
   var st=stat(),tl=topicList(),learned=st.c[8],started=WORDS.length-st.c[0];
   var chips=h('div',{class:'chips'},
-    h('button',{class:'chip'+(selTopic===''?' on':''),onclick:function(){selTopic='';home(true);}},'Alle Wörter',h('small',null,String(WORDS.length))));
+    h('button',{class:'chip'+(selTopic===''?' on':''),onclick:function(){stay(function(){selTopic='';home(true);});}},'Alle Wörter',h('small',null,String(WORDS.length))));
   tl.forEach(function(t){
     var ws=WORDS.filter(function(w){return w.t===t;});if(!ws.length)return;
     var l=ws.filter(function(w){var r=P.w[w.en];return r&&r.s>=8;}).length;
-    chips.append(h('button',{class:'chip'+(selTopic===t?' on':''),onclick:function(){selTopic=t;home(true);}},t,h('small',null,l+'/'+ws.length)));
+    chips.append(h('button',{class:'chip'+(selTopic===t?' on':''),onclick:function(){stay(function(){selTopic=t;home(true);});}},t,h('small',null,l+'/'+ws.length)));
   });
   var startSel=h('select',{class:'plain',style:'flex:none;font:inherit'},h('option',{value:'0'},'ganz am Anfang'),h('option',{value:'28'},'gleich mit Tunnel und Gruben'),h('option',{value:'60'},'alles, auch Möhren und lange Gruben'));
   var head=h('div',{class:'top'},h('h1',{style:'flex:1;margin:0'},'Hallo '+kid.name+'!'),
@@ -1150,7 +1151,7 @@ function wordsPage(){
   mount(h("div",{class:"top"},h("h1",{style:"flex:1;margin:0"},"📖 Mein Vokabelschatz"),h("button",{class:"btn small",onclick:home},"Zurück")),
     h("div",{class:"card"},chestEl(st.pct),h("b",null,"Alle Wörter: "+st.pct+" %"),barEl(st.pct,"big"),h("p",{class:"soft",style:"margin:6px 0 0"},st.five+" von "+WORDS.length+" Wörtern mit 5 Sternen")),
     h("div",{class:"card"},h("b",null,"Welche Wörter möchtest du üben?"),
-      h("div",{class:"row",style:"align-items:center"},"von",mk(fMin,function(v){fMin=v;if(fMax<fMin)fMax=v;wordsPage();}),"bis",mk(fMax,function(v){fMax=v;if(fMin>fMax)fMin=v;wordsPage();}),h("b",null,sel.length+" Wörter")),
+      h("div",{class:"row",style:"align-items:center"},"von",mk(fMin,function(v){stay(function(){fMin=v;if(fMax<fMin)fMax=v;wordsPage();});}),"bis",mk(fMax,function(v){stay(function(){fMax=v;if(fMin>fMax)fMin=v;wordsPage();});}),h("b",null,sel.length+" Wörter")),
       h("div",{class:"row"},
         h("button",{class:"btn primary",disabled:!sel.length,onclick:function(){startSession(null,sel);}},"▶ Diese Wörter üben"),
         h("button",{class:"btn blue",disabled:!seen.length,onclick:function(){testSetup(seen,"Test mit den Wörtern von "+fMin+" bis "+fMax+" Sternen ("+seen.length+" Wörter).");}},"📝 Diese Wörter testen"))),
@@ -1161,7 +1162,7 @@ function wordsPage(){
 }
 function settings(noPull){
   view='settings';
-  if(!noPull&&fam())pullAll().then(function(ch){if(ch&&view==='settings')settings(true);});
+  if(!noPull&&fam())pullAll().then(function(ch){if(ch&&view==='settings')stay(function(){settings(true);});});
   var en=h('input',{class:'plain',type:'text',placeholder:'English word',autocapitalize:'off',spellcheck:'false'});
   var de=h('input',{class:'plain',type:'text',placeholder:'Deutsch (z. B. die Schildkröte)'});
   var em=h('input',{class:'plain',type:'text',placeholder:'Emoji',style:'max-width:90px'});
