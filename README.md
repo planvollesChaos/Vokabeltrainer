@@ -24,6 +24,11 @@ Eine einzige `index.html`, keine Abhängigkeiten, läuft im Browser und speicher
   Die Familie hat einen zufälligen Code (`vt:fam`); Geräte verbindet man mit dem Link `…/#fam=CODE`. Gespeichert wird pro Profil nur Name, Häschen, Lernstand und Lernprotokoll.
   Regeln: `firestore.rules`. Zusammenführen pro Wort nach Zeitstempel (`t`), mehrere Geräte pro Kind sind möglich.
 
+## Spiele
+- Belohnung: Nach jeder Übungsrunde (ab 8 Antworten) gibt es eine Spielrunde, nach etwa 20 Minuten am Stück eine Spielpause (ersetzt die frühere Wartepause). Die Runde endet von selbst nach 3 Leben. Spielzeit zählt nicht als Lernzeit. Eltern können Spiele im Eltern-Bereich ausschalten.
+- **Jump-and-Run** (`spiel-run.js`, Canvas ohne Bibliothek): Tippen = springen, 2× tippen = Doppelsprung, nach unten wischen = ducken (Hasentunnel), 2× schnell nach oben wischen = Riesenmöhre ziehen (Laptop: Pfeil hoch = springen, Pfeil runter = ducken, Leertaste 2× schnell = Möhre ziehen). Kein Ziel, es wird immer schneller; Punkte = Strecke + Karotten. Rekorde je Profil (`g.run`), beide Kinder sehen die Rekorde des anderen.
+- Geplant: Sudoku als zweites Spiel (Auswahl „Action oder Denken“ ist im Spielmenü schon vorbereitet).
+
 ## Aussprache
 Vorab erzeugte britische MP3s in `audio/` (Google Cloud TTS, en-GB-Neural2-A): normal (Tempo 0,95),
 `audio/slow/` langsam (0,5), dazu 26 Buchstabennamen (`audio/letter-*.mp3`). Neue Wörter ohne Datei

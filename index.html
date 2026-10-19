@@ -250,7 +250,7 @@ function logAns(w,ok,from,to){
 }
 var lastAct=0,lastSave=0,sessSec=0,BREAK_S=1200;
 function activity(){
-  if(!kid||!P||kid.role==="parent")return;
+  if(!kid||!P||kid.role==="parent"||inGame)return;
   var n=Date.now();
   if(lastAct){var gap=(n-lastAct)/1000;dayLog().s+=Math.min(gap,60);if(gap>=300)sessSec=0;else sessSec+=Math.min(gap,60);if(n-lastSave>15000){saveP();lastSave=n;}}
   lastAct=n;
@@ -259,7 +259,7 @@ document.addEventListener("pointerdown",activity,true);
 document.addEventListener("keydown",activity,true);
 document.addEventListener("visibilitychange",function(){lastAct=0;if(document.hidden&&P&&kid){saveP();flush();}});
 window.addEventListener("pagehide",function(){if(P&&kid){saveP();flush();}});
-function normP(p){p=p&&typeof p==="object"?p:{};p.w=p.w||{};p.err=p.err||{};p.log=p.log||{};p.dip=p.dip||{};return p;}
+function normP(p){p=p&&typeof p==="object"?p:{};p.w=p.w||{};p.err=p.err||{};p.log=p.log||{};p.dip=p.dip||{};p.g=p.g||{};return p;}
 function profileData(k){return normP(lj("vt:"+k.id,null));}
 var GOAL_S=1200,GOAL_DAYS=4;
 var STARNAME=["Noch nicht geübt","Entdeckt","Wortsalat","Tippen & Hören","Buchstabieren","Meister"];
@@ -319,6 +319,7 @@ function weekCard(k){
   return h("div",{class:"card"},
     h("div",{class:"row",style:"align-items:center;margin:0 0 6px"},avatar(k),h("h2",{style:"margin:0;flex:1"},k.name),h("b",null,pct+" % gelernt")),
     barEl(pct,"big"),h("p",{class:"soft",style:"margin:4px 0 8px"},five+" von "+WORDS.length+" Wörtern mit 5 Sternen"),
+    p.g&&p.g.run?h("p",{class:"soft",style:"margin:0 0 6px"},"🎮 Jump-and-Run: Rekord "+p.g.run.best+" Punkte, "+p.g.run.plays+" Runden gespielt"):null,
     h("b",null,"⭐ Wörter nach Sternen"),starRank(p),
     h("p",{style:"margin:14px 0 4px"},h("b",null,"🗓 Lernzeit: "+mins+" min"),", "+st.active+" von 7 Tagen"),
     bars,
@@ -363,11 +364,12 @@ function setSync(ok,msg){try{if(ok){localStorage.setItem("vt:syncAt",String(Date
 function mergeP(a,b){
   if(!a)return normP(b);if(!b)return normP(a);
   a=normP(a);b=normP(b);
-  var o={w:{},err:{},log:{},dip:{}};
+  var o={w:{},err:{},log:{},dip:{},g:{}};
   function keys(x,y){var s={};Object.keys(x||{}).concat(Object.keys(y||{})).forEach(function(k){s[k]=1;});return Object.keys(s);}
   keys(a.w,b.w).forEach(function(x){var ra=(a.w||{})[x],rb=(b.w||{})[x];o.w[x]=!ra?rb:!rb?ra:((rb.t||0)>(ra.t||0)?rb:ra);});
   keys(a.log,b.log).forEach(function(x){var la=(a.log||{})[x],lb=(b.log||{})[x];o.log[x]=!la?lb:!lb?la:(((lb.n||0)>(la.n||0))||((lb.n||0)===(la.n||0)&&(lb.s||0)>(la.s||0))?lb:la);});
   keys(a.err,b.err).forEach(function(x){o.err[x]=Math.max((a.err||{})[x]||0,(b.err||{})[x]||0);});
+  keys(a.g,b.g).forEach(function(x){var ga=(a.g||{})[x],gb=(b.g||{})[x];o.g[x]=!ga?gb:!gb?ga:{best:Math.max(ga.best||0,gb.best||0),plays:Math.max(ga.plays||0,gb.plays||0)};});
   keys(a.dip,b.dip).forEach(function(x){var da=(a.dip||{})[x],db=(b.dip||{})[x];o.dip[x]=!da?db:!db?da:(da<db?da:db);});
   return o;
 }
@@ -603,7 +605,7 @@ function testSetup(pool,label){
       h("h2",null,"Wie viele Wörter?"),h("div",{class:"row"},opts.map(function(n){return h("button",{class:"btn primary",onclick:function(){startTest(pool,n);}},n===pool.length&&opts.length>1?"Alle ("+n+")":String(n));}))));
 }
 var BREAK_WAIT_MS=300000;
-function showBreak(){
+function showCountdownBreak(){
   var end=Date.now()+BREAK_WAIT_MS,timer=null;
   var left=h("div",{style:"font-size:46px;font-weight:800;margin:6px 0"},"5:00");
   var go=h("button",{class:"btn primary",disabled:true,onclick:function(){clearInterval(timer);sessSec=0;next();}},"Weiter üben");
@@ -679,10 +681,66 @@ function summary(){
   var tot=S.ok+S.bad,ratio=tot?S.ok/tot:0,stars=ratio>=0.9?3:ratio>=0.7?2:1;
   var errs=Object.keys(S.errs).sort(function(a,b){return S.errs[b]-S.errs[a];});
   mount(h('div',{class:'card center'},h('h1',null,'Geschafft! '+'⭐'.repeat(stars)),pic('ergebnis-'+band(Math.round(ratio*100))),
-    h('p',null,S.ok+' von '+tot+' richtig'),dipEl(nd),
+    h('p',null,S.ok+' von '+tot+' richtig'),dipEl(nd),rewardEl(),
     Object.keys(S.stars).length?h('div',null,h('h2',null,'Deine Sterne'),Object.keys(S.stars).map(function(k){var t=S.stars[k];return h('div',{class:'wl',style:'grid-template-columns:1fr auto'},h('span',null,t.w.en),h('span',null,starsEl(t.to),t.to>t.from?' ⬆':(t.to<t.from?' ⬇':'')));})):null,
     errs.length?h('div',null,h('h2',null,'Hier üben wir weiter'),errs.map(function(e){return h('p',null,TRAPTXT[e]+' ('+S.errs[e]+'×)');})):h('p',null,'Fehlerfrei – super!'),
     h('div',{class:'row'},h('button',{class:'btn primary',onclick:function(){startSession(S.topic||null,S.words||null);}},'Noch eine Runde'),h('button',{class:'btn',onclick:home},'Fertig'))));
+}
+
+/* ---------- Spiele (Belohnung nach der Runde und Spielpause) ---------- */
+var inGame=false;
+function gamesOn(){try{return localStorage.getItem("vt:games")!=="0";}catch(e){return true;}}
+function loadScript(src,ok,fail){
+  window.__ls=window.__ls||{};
+  if(window.__ls[src]){ok();return;}
+  var sc=document.createElement("script");sc.src=src;
+  sc.onload=function(){window.__ls[src]=1;ok();};
+  sc.onerror=function(){if(fail)fail();};
+  document.head.append(sc);
+}
+function gameStats(){if(!P.g)P.g={};return P.g;}
+function recordsLine(){
+  var kids=KIDS.filter(function(k){return k.role!=="parent";}),out=[];
+  kids.forEach(function(k){var p=(kid&&k.id===kid.id)?P:profileData(k),b=(p.g&&p.g.run&&p.g.run.best)||0;out.push(k.name+": "+b);});
+  return "🏆 Rekorde – "+out.join(" · ");
+}
+function playRun(done,startT){
+  inGame=true;lastAct=0;
+  var box=h("div"),best=((P.g||{}).run||{}).best||0;
+  function end(){inGame=false;lastAct=0;}
+  mount(h("div",{class:"top"},h("h1",{style:"flex:1;margin:0"},"🏃 Jump-and-Run")),
+    h("p",{class:"soft",style:"margin:0 0 8px"},"Sammle Karotten und weiche den Hindernissen aus. Du hast 3 Leben."),box);
+  loadScript("spiel-run.js",function(){
+    window.HoppelRun.start(box,{best:best,startT:startT||0,onEnd:function(r){
+      var G=gameStats(),R=G.run||(G.run={best:0,plays:0});
+      R.plays++;if(r.score>R.best)R.best=r.score;saveP();
+      box.replaceChildren(h("div",{class:"card center"},
+        pic(r.newRecord&&best>0?"ergebnis-5":"kaninchen-winkt","hero"),
+        h("h2",null,r.newRecord&&best>0?"Neuer Rekord! 🏆":"Geschafft!"),
+        h("p",null,h("b",null,r.score+" Punkte")," · "+r.meters+" m weit · "+r.carrots+" Karotten"+(r.pulls?" · "+r.pulls+" Möhre(n) gezogen":"")),
+        h("p",{class:"soft"},recordsLine()),
+        h("button",{class:"btn primary big",onclick:function(){end();done();}},"Weiter")));
+    }});
+  },function(){end();box.textContent="Das Spiel konnte nicht geladen werden.";setTimeout(done,1500);});
+}
+var GAMES=[{id:"run",emoji:"🏃",name:"Jump-and-Run",text:"ein bisschen Action",play:playRun}];
+function gameMenu(title,text,done,extra){
+  mount(h("div",{class:"card center"},pic("kaninchen-winkt","hero"),h("h2",null,title),h("p",null,text),
+    h("div",{class:"row",style:"justify-content:center"},
+      GAMES.map(function(gm){return h("button",{class:"btn primary",onclick:function(){gm.play(done);}},gm.emoji+" "+gm.name+" – "+gm.text);}),
+      extra||null)));
+}
+function rewardEl(){
+  if(!S||S.test||S.done<8||S.rewarded||!gamesOn())return null;
+  return h("div",{class:"fb ok"},h("h2",{style:"margin-top:0"},"🎮 Spielrunde verdient!"),
+    h("p",null,"Du hast fleißig geübt. Zur Belohnung darfst du jetzt eine Runde spielen."),
+    h("button",{class:"btn primary",onclick:function(){S.rewarded=true;gameMenu("Was möchtest du spielen?","Heute Lust auf ein bisschen Action?",function(){summary();});}},"🎮 Jetzt spielen"));
+}
+function showBreak(){
+  if(!gamesOn()){showCountdownBreak();return;}
+  gameMenu("Zeit für eine Spielpause! 🌿","Du hast richtig lange konzentriert geübt. Jetzt darf der Lernkopf sich ausruhen: Spiel eine Runde, danach geht es frisch weiter.",
+    function(){sessSec=0;next();},
+    h("button",{class:"btn",onclick:function(){sessSec=0;summary();}},"Für heute Schluss"));
 }
 
 /* ---------- Eingabe-Bausteine ---------- */
@@ -912,6 +970,7 @@ function home(noPull){
     var l=ws.filter(function(w){var r=P.w[w.en];return r&&r.s>=8;}).length;
     chips.append(h('button',{class:'chip'+(selTopic===t?' on':''),onclick:function(){selTopic=t;home(true);}},t,h('small',null,l+'/'+ws.length)));
   });
+  var startSel=h('select',{class:'plain',style:'flex:none;font:inherit'},h('option',{value:'0'},'ganz am Anfang'),h('option',{value:'28'},'gleich mit Tunnel und Gruben'),h('option',{value:'60'},'alles, auch Möhren und lange Gruben'));
   var head=h('div',{class:'top'},h('h1',{style:'flex:1;margin:0'},'Hallo '+kid.name+'!'),
     parent?h('button',{class:'btn small',onclick:function(){settings();}},'⚙️ Einstellungen'):null,
     h('button',{class:'btn small',onclick:function(){kid=null;try{localStorage.removeItem('vt:currentKid');}catch(e){}selectKid();}},'Wechseln'));
@@ -932,6 +991,8 @@ function home(noPull){
       weekBlock(home),
       h('h2',null,'🐰 Selbst üben und testen'),
       h('p',{class:'soft',style:'margin-top:0'},'Euer eigener Übungsbereich. Euer Fortschritt zählt hier nicht in die Wochenübersicht der Kinder.'),
+      h('div',{class:'card'},h('b',null,'🎮 Spiele zum Ausprobieren'),h('p',{class:'soft',style:'margin:4px 0 10px'},'Hier könnt ihr die Spiele jederzeit spielen, auch ohne Belohnung. Bei den Kindern gibt es sie als Belohnung nach dem Üben.'),
+        h('div',{class:'row',style:'align-items:center'},h('label',{class:'soft'},'Start: '),startSel,GAMES.map(function(gm){return h('button',{class:'btn primary',onclick:function(){gm.play(function(){home(true);},+startSel.value);}},gm.emoji+' '+gm.name);}))),
       practice);
   }else{
     mount(head,pic('kaninchen-winkt','hero'),weekKidCard(),practice);
@@ -973,10 +1034,12 @@ function settings(noPull){
   var msg=h('div',{class:'msg'}),lmsg=h('div',{class:'msg'});
   var lst=h('textarea',{class:'plain',rows:'6',style:'width:100%;font:inherit',autocapitalize:'off',spellcheck:'false',placeholder:'friend = der Freund\nschool = die Schule'});
   var ltp=h('input',{class:'plain',type:'text',placeholder:'Thema für diese Wörter',value:'Weitere Wörter'});
+  var gmBox=h('input',{type:'checkbox',style:'width:24px;height:24px'});gmBox.checked=gamesOn();gmBox.addEventListener('change',function(){try{localStorage.setItem('vt:games',gmBox.checked?'1':'0');}catch(e){}});
   var mic=h('input',{type:'checkbox',style:'width:24px;height:24px'});mic.checked=localStorage.getItem('vt:mic')==='1';
   mic.addEventListener('change',function(){try{localStorage.setItem('vt:mic',mic.checked?'1':'0');}catch(e){}});
   mount(h('div',{class:'top'},h('h1',{style:'flex:1;margin:0'},'⚙️ Einstellungen'),h('button',{class:'btn small',onclick:function(){home();}},'Zurück')),
     familyCard(),
+    h('div',{class:'card'},h('h2',{style:'margin-top:0'},'🎮 Spiele'),h('label',{class:'row'},gmBox,h('span',null,'Spiele als Belohnung und Spielpause anbieten')),h('p',{class:'soft'},'Nach jeder Übungsrunde gibt es eine Spielrunde, nach etwa 20 Minuten am Stück eine Spielpause. Die Runde endet von selbst, wenn die 3 Leben weg sind. Die Spielzeit zählt nicht als Lernzeit. Die Einstellung gilt nur für dieses Gerät.')),
     h('div',{class:'card'},h('h2',{style:'margin-top:0'},'Buchstabieren per Mikrofon'),
       SR?h('label',{class:'row'},mic,h('span',null,'Mikrofon in Stufe 6 anbieten')):h('p',null,'Dieser Browser unterstützt keine Spracherkennung. Stufe 6 läuft über die Buchstaben-Tasten.'),
       h('p',{class:'soft'},'Hinweis: Bei eingeschaltetem Mikrofon wird die Sprache vom Browser an einen Online-Dienst (Google bzw. Apple) zur Erkennung geschickt. Bitte nur einschalten, wenn das für euch in Ordnung ist. Ohne Mikrofon sagen die Kinder die Buchstaben laut und tippen sie an.')),
