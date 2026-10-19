@@ -210,7 +210,7 @@ function start(box,opt){
     s.pops.forEach(function(p){g.globalAlpha=Math.max(0,p.life);g.fillStyle="#E8A33D";g.font="800 22px system-ui,sans-serif";g.textAlign="center";g.fillText(p.t,p.x,p.y);g.globalAlpha=1;});
     g.textAlign="left";g.textBaseline="top";g.fillStyle="#1B1A1E";
     var hearts="";for(i=0;i<3;i++)hearts+=i<s.lives?"❤️":"🤍";
-    g.font="22px "+EMOJI;g.fillText(hearts,opt.fit?62:12,10);
+    g.font="22px "+EMOJI;g.fillText(hearts,opt.fit?Math.round(66/Math.max(0.3,(cv.clientWidth||W)/W)):12,10);
     g.textAlign="right";g.font="800 22px system-ui,sans-serif";g.fillText(score()+" Punkte",W-12,10);
     g.font="600 14px system-ui,sans-serif";g.fillStyle="#6E6A63";
     g.fillText(Math.floor(s.dist/50)+" m"+(opt.best?" · Rekord "+opt.best+" m":""),W-12,36);

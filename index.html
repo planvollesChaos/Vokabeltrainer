@@ -710,10 +710,11 @@ function summary(){
 /* ---------- Spiele (Belohnung nach der Runde und Spielpause) ---------- */
 var inGame=false;
 function gamesOn(){try{return localStorage.getItem("vt:games")!=="0";}catch(e){return true;}}
+var APPV="2026-10-19-4";
 function loadScript(src,ok,fail){
   window.__ls=window.__ls||{};
   if(window.__ls[src]){ok();return;}
-  var sc=document.createElement("script");sc.src=src;
+  var sc=document.createElement("script");sc.src=src+"?v="+APPV;
   sc.onload=function(){window.__ls[src]=1;ok();};
   sc.onerror=function(){if(fail)fail();};
   document.head.append(sc);
@@ -731,8 +732,6 @@ function sdLine(size){
 var fsEl=null,fsOff=null;
 function closeFS(){
   if(!fsEl)return;
-  try{if(document.fullscreenElement&&document.exitFullscreen){var pe=document.exitFullscreen();if(pe&&pe.catch)pe.catch(function(){});}}catch(e){}
-  try{if(screen.orientation&&screen.orientation.unlock)screen.orientation.unlock();}catch(e){}
   if(fsOff)fsOff();
   fsEl.remove();fsEl=null;fsOff=null;
   document.documentElement.style.overflow="";document.body.style.overflow="";
@@ -741,12 +740,6 @@ function enterFS(){
   closeFS();
   var o=h("div",{class:"gamefs"});document.body.append(o);fsEl=o;
   document.documentElement.style.overflow="hidden";document.body.style.overflow="hidden";
-  if((navigator.maxTouchPoints||0)>0){
-    try{
-      var f=o.requestFullscreen||o.webkitRequestFullscreen;
-      if(f){var pr=f.call(o);if(pr&&pr.then)pr.then(function(){try{var l=screen.orientation.lock("landscape");if(l&&l.catch)l.catch(function(){});}catch(e){}}).catch(function(){});}
-    }catch(e){}
-  }
   return o;
 }
 function playRun(done,opts){
