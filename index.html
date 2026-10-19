@@ -57,9 +57,9 @@ p{margin:6px 0}.soft{color:var(--soft)}.center{text-align:center}
 .podium.mini{margin:12px 0 0}.podium.mini .pod{cursor:default}.podium.mini .pname{font-size:17px}
 .pindots{display:flex;gap:14px;justify-content:center;margin:18px 0}.pindots span{width:20px;height:20px;border-radius:50%;border:3px solid var(--ink)}.pindots span.on{background:var(--ink)}
 .pinpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:320px;margin:10px auto}.pinpad .btn{font-size:26px;min-height:62px}
-.gamefs{position:fixed;inset:0;z-index:50;background:#1d1b2b;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:none}
+.gamefs{position:fixed;left:0;top:0;width:100%;height:100%;height:100dvh;z-index:50;background:#1d1b2b;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:none}
 .gamebox{display:flex;align-items:center;justify-content:center;width:100%;height:100%}
-.gamequit{position:absolute;right:10px;bottom:10px;z-index:3;opacity:.85}
+.gamequit{position:absolute;left:8px;top:8px;z-index:6;width:46px;height:46px;border-radius:50%;background:#D93A52;color:#fff;border:3px solid #fff;font:inherit;font-size:22px;font-weight:800;padding:0;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.35);cursor:pointer;touch-action:manipulation}
 .rothint{position:absolute;inset:0;z-index:4;background:#1d1b2b;color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px}
 .rotico{font-size:76px;line-height:1;animation:rotp 2.4s ease-in-out infinite}@keyframes rotp{0%,25%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}
 .avatar.pod{width:100%;max-width:96px;height:96px;object-fit:contain;display:block;margin:0 auto 4px}.avatar.pod.wide{width:100%;max-width:120px;height:74px}.avatar.ph.pod{width:84px;height:84px;font-size:48px}
@@ -758,7 +758,7 @@ function playRun(done,opts){
     h("button",{class:"btn",onclick:function(){ignore=true;upd();}},"Lieber hochkant spielen"));
   function upd(){hint.style.display=(!ignore&&window.innerHeight>window.innerWidth)?"flex":"none";}
   window.addEventListener("resize",upd);fsOff=function(){window.removeEventListener("resize",upd);};
-  var quit=h("button",{class:"btn small gamequit",onclick:function(){if(run&&run.stop)run.stop();closeFS();end();done();}},"✕ Beenden");
+  var quit=h("button",{class:"gamequit","aria-label":"Spiel beenden",title:"Beenden",onclick:function(){if(run&&run.stop)run.stop();closeFS();end();done();}},"✕");
   o.append(box,hint,quit);upd();
   function page(inner){mount(h("div",{class:"top"},h("h1",{style:"flex:1;margin:0"},"🏃 Jump-and-Run")),inner);}
   loadScript("spiel-run.js",function(){
