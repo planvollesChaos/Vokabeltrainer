@@ -42,6 +42,7 @@ p{margin:6px 0}.soft{color:var(--soft)}.center{text-align:center}
 .stars{white-space:nowrap;letter-spacing:1px}.stars i{font-style:normal;color:var(--edge)}.stars i.on{color:#E8A33D}
 .pbar{height:8px;border-radius:99px;background:var(--paper);border:1px solid var(--edge);overflow:hidden;margin-top:4px}.pbar i{display:block;height:100%;background:var(--lilac);border-radius:99px;transition:width .4s}
 .pbar.big{height:16px}.wl .wr{text-align:right}.wl small{display:block}
+.mission{border-color:#c9b8ea;background:linear-gradient(135deg,rgba(255,255,255,.88),rgba(240,232,255,.94));overflow:hidden}.mission-kicker{font-size:13px;font-weight:800;letter-spacing:.08em;color:var(--lilac-dark);margin-right:96px}.missionbar{clear:both;background:#fff}.missionbar i{background:linear-gradient(90deg,#8B6FC4,#e8a33d)}
 .pic{display:block;max-width:100%;height:auto;margin:6px auto}.pic.hero{max-height:170px}.pic.small{max-height:130px}
 .avatar{width:56px;height:56px;object-fit:contain;flex:none}.avatar.big{width:96px;height:96px;display:block;margin:0 auto 6px}
 .chest{float:right;width:96px;height:auto;margin:0 0 4px 8px}.card .stats{clear:both}
@@ -1212,10 +1213,27 @@ function pinCard(){
     }},"Speichern")),msg);
 }
 function stat(){
-  var c=[0,0,0,0,0,0,0,0,0],now=Date.now(),due=0,sum=0,five=0;
+  var c=[0,0,0,0,0,0,0,0,0],now=Date.now(),due=0,sum=0,five=0,three=0;
   WORDS.forEach(function(w){var r=P.w[w.en];if(!r){c[0]++;return;}c[Math.min(r.s,8)]++;if(r.d<=now)due++;});
-  WORDS.forEach(function(w){var r=P.w[w.en];sum+=pctOf(r);if(r&&r.s>=8)five++;});
-  return {c:c,due:due,pct:WORDS.length?Math.round(sum/WORDS.length):0,five:five};
+  WORDS.forEach(function(w){var r=P.w[w.en];sum+=pctOf(r);if(r&&r.s>=8)five++;if(starsOf(r)>=3)three++;});
+  return {c:c,due:due,pct:WORDS.length?Math.round(sum/WORDS.length):0,five:five,three:three,threePct:WORDS.length?Math.round(100*three/WORDS.length):0};
+}
+function missionEnd(){var d=new Date(2026,10,1,23,59,59);return Date.now()<=d.getTime()?" BIS "+d.toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"}):"";}
+function missionText(p){
+  if(p>=100)return "Mission geschafft – jedes Wort hat mindestens drei Sterne!";
+  if(p>=75)return "Der Endspurt läuft – ganz viele Wörter sind schon sicher!";
+  if(p>=50)return "Mehr als die Hälfte ist geschafft – richtig stark!";
+  if(p>=25)return "Du bist gut unterwegs – die Sternensammlung wächst!";
+  if(p>0)return "Die ersten Wörter sind auf Kurs – weiter geht’s!";
+  return "Heute beginnt deine 3-Sterne-Mission!";
+}
+function missionCard(st){
+  return h('div',{class:'card mission'},chestEl(st.threePct),
+    h('div',{class:'mission-kicker'},('DEINE 3-STERNE-MISSION'+missionEnd()).toUpperCase()),
+    h('h2',{style:'margin:4px 0'},'Alle Vokabeln mindestens ',starsEl(3)),
+    h('p',{style:'margin:4px 0 10px'},missionText(st.threePct)),
+    h('div',{class:'pbar big missionbar','aria-label':'Fortschritt zur Drei-Sterne-Mission'},h('i',{style:'width:'+st.threePct+'%'})),
+    h('p',{class:'soft',style:'margin:7px 0 0'},st.threePct>=100?'Jetzt kannst du die Wörter weiter bis zum Meister-Stern trainieren.':'Los geht’s übt zuerst die Wörter, die noch unter drei Sternen liegen.'));
 }
 var selTopic='';
 function home(noPull){
@@ -1225,23 +1243,24 @@ function home(noPull){
   if(parent&&noPull!==true&&fam())pullAll().then(function(ch){if(ch&&view==='home'&&kid&&kid.role==='parent'&&!busy)stay(function(){home(true);});});
   var st=stat(),tl=topicList(),learned=st.c[8],started=WORDS.length-st.c[0];
   var chips=h('div',{class:'chips'},
-    h('button',{class:'chip'+(selTopic===''?' on':''),onclick:function(){stay(function(){selTopic='';home(true);});}},'Alle Wörter',h('small',null,String(WORDS.length))));
+    h('button',{class:'chip'+(selTopic===''?' on':''),onclick:function(){stay(function(){selTopic='';home(true);});}},'Alle Wörter',parent?h('small',null,String(WORDS.length)):null));
   tl.forEach(function(t){
     var ws=WORDS.filter(function(w){return w.t===t;});if(!ws.length)return;
-    var l=ws.filter(function(w){var r=P.w[w.en];return r&&r.s>=8;}).length;
-    chips.append(h('button',{class:'chip'+(selTopic===t?' on':''),onclick:function(){stay(function(){selTopic=t;home(true);});}},t,h('small',null,l+'/'+ws.length)));
+    var l=ws.filter(function(w){var r=P.w[w.en];return r&&r.s>=8;}).length,three=ws.every(function(w){return starsOf(P.w[w.en])>=3;});
+    chips.append(h('button',{class:'chip'+(selTopic===t?' on':''),onclick:function(){stay(function(){selTopic=t;home(true);});}},t,parent?h('small',null,l+'/'+ws.length):(three?h('small',null,'★★★ ✓'):null)));
   });
   var startSel=h('select',{class:'plain',style:'flex:none;font:inherit'},h('option',{value:'0'},'ganz am Anfang'),h('option',{value:'28'},'gleich mit Tunnel und Gruben'),h('option',{value:'60'},'alles, auch Möhren und lange Gruben'));
   var head=h('div',{class:'top'},h('h1',{style:'flex:1;margin:0'},'Hallo '+kid.name+'!'),
     parent?h('button',{class:'btn small',onclick:function(){settings();}},'⚙️ Einstellungen'):null,
     h('button',{class:'btn small',onclick:function(){kid=null;try{localStorage.removeItem('vt:currentKid');}catch(e){}selectKid();}},'Wechseln'));
+  var topicWords=WORDS.filter(function(w){return !selTopic||w.t===selTopic;}),missionWords=topicWords.filter(function(w){return starsOf(P.w[w.en])<3;});
   var practice=[
-    h('div',{class:'card'},chestEl(st.pct),h('div',{class:'row',style:'align-items:center;justify-content:space-between;margin:0'},h('b',null,parent?'📖 Euer Vokabelschatz':'📖 Dein Vokabelschatz'),h('span',null,st.pct+' %')),barEl(st.pct,'big'),h('p',{class:'soft',style:'margin:6px 0 12px'},st.five+' von '+WORDS.length+' Wörtern mit 5 Sternen ⭐⭐⭐⭐⭐'),h('div',{class:'stats'},
+    parent?h('div',{class:'card'},chestEl(st.pct),h('div',{class:'row',style:'align-items:center;justify-content:space-between;margin:0'},h('b',null,'📖 Euer Vokabelschatz'),h('span',null,st.pct+' %')),barEl(st.pct,'big'),h('p',{class:'soft',style:'margin:6px 0 12px'},st.five+' von '+WORDS.length+' Wörtern mit 5 Sternen ⭐⭐⭐⭐⭐'),h('div',{class:'stats'},
       h('div',null,h('b',null,String(st.due)),'zu wiederholen'),
       h('div',null,h('b',null,String(st.c[0])),'noch neu'),
       h('div',null,h('b',null,String(started-learned)),'in Arbeit'),
-      h('div',null,h('b',null,String(learned)),'5 Sterne ✓'))),
-    h('button',{class:'btn primary big',onclick:function(){startSession(selTopic||null);}},'▶ Los geht’s (ca. 10 Minuten)'),
+      h('div',null,h('b',null,String(learned)),'5 Sterne ✓'))):missionCard(st),
+    h('button',{class:'btn primary big',onclick:function(){startSession(selTopic||null,parent?null:(missionWords.length?missionWords:topicWords));}},'▶ Los geht’s'),
     h('h2',null,'Welche Wörter?'),chips,
     h('div',{class:'row'},h('button',{class:'btn',onclick:wordsPage},'📖 Mein Vokabelschatz'),h('button',{class:'btn blue',onclick:function(){testSetup(WORDS.filter(function(w){return P.w[w.en]&&P.w[w.en].s>=2;}),'Test über alle Wörter, die du schon geübt hast.');}},'📝 Gemischter Test'))
   ];
@@ -1273,8 +1292,9 @@ function wordsPage(){
         h("div",{class:"wr"},starsEl(starsOf(r)),h("small",{class:"soft"},p+" %"))));});
   });
   var seen=sel.filter(function(w){return P.w[w.en]&&P.w[w.en].s>=2;});
+  var parent=kid&&kid.role==='parent';
   mount(h("div",{class:"top"},h("h1",{style:"flex:1;margin:0"},"📖 Mein Vokabelschatz"),h("button",{class:"btn small",onclick:home},"Zurück")),
-    h("div",{class:"card"},chestEl(st.pct),h("b",null,"Alle Wörter: "+st.pct+" %"),barEl(st.pct,"big"),h("p",{class:"soft",style:"margin:6px 0 0"},st.five+" von "+WORDS.length+" Wörtern mit 5 Sternen")),
+    parent?h("div",{class:"card"},chestEl(st.pct),h("b",null,"Alle Wörter: "+st.pct+" %"),barEl(st.pct,"big"),h("p",{class:"soft",style:"margin:6px 0 0"},st.five+" von "+WORDS.length+" Wörtern mit 5 Sternen")):missionCard(st),
     h("div",{class:"card"},h("b",null,"Welche Wörter möchtest du üben?"),
       h("div",{class:"row",style:"align-items:center"},"von",mk(fMin,function(v){stay(function(){fMin=v;if(fMax<fMin)fMax=v;wordsPage();});}),"bis",mk(fMax,function(v){stay(function(){fMax=v;if(fMin>fMax)fMin=v;wordsPage();});}),h("b",null,sel.length+" Wörter")),
       h("div",{class:"row"},

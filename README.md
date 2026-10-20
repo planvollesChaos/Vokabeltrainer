@@ -11,8 +11,11 @@ Eine einzige `index.html`, keine Abhängigkeiten, läuft im Browser und speicher
   (nur das deutsche Wort, ganz ohne Hilfe). Danach gilt das Wort als gelernt (5 Sterne).
 - Sterne: ☆ neu · 1 entdeckt · 2 Wortsalat · 3 Tippen/Hören · 4 Buchstabieren · 5 Meister. Fehler kosten Sterne.
 - Wiederholung nach wachsenden Abständen, sofortige Korrektur, Stolperstellen farbig markiert.
-- **Vokabelschatz:** alle Wörter mit Sternen und Prozent, Filter „von … bis … Sterne“, gezieltes Üben
-  oder Testen dieser Auswahl.
+- **Vokabelschatz:** alle Wörter mit ihren Sternen, Filter „von … bis … Sterne“ und gezieltes Üben
+  oder Testen dieser Auswahl. Prozentwerte erscheinen nur im Elternbereich.
+- **Kinderansicht:** motivierende 3-Sterne-Mission bis zum Ende der nächsten Woche. Keine Prozentzahl
+  und kein „x von y“; „Los geht’s“ übt bevorzugt Wörter unter drei Sternen. Die ausführlichen Zahlen
+  bleiben im Elternbereich.
 - **Gemischter Test:** bunt gemischte Wörter ohne Hilfe, auch bereits gelernte; zeigt den echten Stand.
 - **Diplome:** sind bei allen Wörtern eines Themas 5 Sterne, gibt es eine Urkunde (wird als PDF gespeichert, ohne Drucker).
 - Profile: Ellena, Merle, Eltern. Eltern ergänzen Wörter einzeln oder als Liste und schalten das Mikrofon
