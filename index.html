@@ -340,7 +340,7 @@ function weekCard(k){
   return h("div",{class:"card"},
     h("div",{class:"row",style:"align-items:center;margin:0 0 6px"},avatar(k),h("h2",{style:"margin:0;flex:1"},k.name),h("b",null,pct+" % gelernt")),
     barEl(pct,"big"),h("p",{class:"soft",style:"margin:4px 0 8px"},five+" von "+WORDS.length+" Wörtern mit 5 Sternen"),
-    h("p",{class:"soft",style:"margin:0 0 6px"},"🎮 Jump-and-Run: "+(gameVal(p,"run")?gameVal(p,"run")+" m":"–")+" · 🧩 Sudoku klein: "+(gameVal(p,"sd6")?fmtT(gameVal(p,"sd6")):"–")+" · groß: "+(gameVal(p,"sd9")?fmtT(gameVal(p,"sd9")):"–")),
+    h("p",{class:"soft",style:"margin:0 0 6px"},"🎮 Jump-and-Run: "+(gameVal(p,"run")?gameVal(p,"run")+" m":"–")+" · 🧱 Blöcke: "+(gameVal(p,"block")||"–")+" · 🧩 Sudoku klein: "+(gameVal(p,"sd6")?fmtT(gameVal(p,"sd6")):"–")+" · groß: "+(gameVal(p,"sd9")?fmtT(gameVal(p,"sd9")):"–")),
     h("b",null,"⭐ Wörter nach Sternen"),starRank(p),
     h("p",{style:"margin:14px 0 4px"},h("b",null,"🗓 Lernzeit: "+mins+" min"),", "+st.active+" von 7 Tagen"),
     bars,
@@ -727,7 +727,7 @@ function cfg(){
   return {ev:c.ev===2?2:1,n:c.n>=1&&c.n<=5?c.n:3};
 }
 function gamesOn(){try{return localStorage.getItem("vt:games")!=="0";}catch(e){return true;}}
-var APPV="2026-10-20-2";
+var APPV="2026-10-20-4";
 function loadScript(src,ok,fail){
   window.__ls=window.__ls||{};
   if(window.__ls[src]){ok();return;}
@@ -745,6 +745,10 @@ function recordsLine(){
 function sdLine(size){
   var out=KIDS.map(function(k){var p=(kid&&k.id===kid.id)?P:profileData(k),t=gameVal(p,"sd"+size);return k.name+": "+(t?fmtT(t):"–");});
   return "🏆 Schnellste Zeit "+(size===9?"groß":"klein")+" – "+out.join(" · ");
+}
+function blockLine(){
+  var out=KIDS.map(function(k){var p=(kid&&k.id===kid.id)?P:profileData(k),b=gameVal(p,"block")||0;return k.name+": "+b;});
+  return "🏆 Meiste Punkte – "+out.join(" · ");
 }
 var fsEl=null,fsOff=null;
 function closeFS(){
@@ -785,6 +789,28 @@ function playRun(done,opts){
     }});
   },function(){closeFS();page(h("div",{class:"card center"},h("p",null,"Das Spiel konnte nicht geladen werden.")));setTimeout(function(){end();done();},1500);});
 }
+function playBlock(done,opts){
+  inGame=true;lastAct=0;
+  var o=enterFS(),box=h("div",{class:"gamebox"}),B0=(P.g||{}).block||{},best=B0.best||0,blk=null;
+  function end(){inGame=false;lastAct=0;}
+  var quit=h("button",{class:"gamequit","aria-label":"Spiel beenden",title:"Beenden",onclick:function(){if(blk&&blk.stop)blk.stop();closeFS();end();done();}},"✕");
+  o.append(box,quit);
+  function page(inner){mount(h("div",{class:"top"},h("h1",{style:"flex:1;margin:0"},"🧱 Hoppel-Blöcke")),inner);}
+  loadScript("spiel-block.js",function(){
+    blk=window.HoppelBlock.start(box,{onEnd:function(r){
+      var G=gameStats(),R=G.block||(G.block={best:0,plays:0});
+      var neu=r.score>(R.best||0);
+      R.plays=(R.plays||0)+1;R.t=Date.now();if(neu)R.best=r.score;if(r.level>(R.lv||0))R.lv=r.level;saveP();
+      closeFS();
+      page(h("div",{class:"card center"},
+        pic(neu&&best>0?"ergebnis-5":"kaninchen-winkt","hero"),
+        h("h2",null,neu&&best>0?"Neuer Rekord! 🏆":"Geschafft!"),
+        h("p",null,h("b",null,r.score+" Punkte")," · Level "+r.level+" · "+r.lines+" Reihe(n)"+(r.trios?" · "+r.trios+"× Hoppel-Bonus 🐰":"")),
+        h("p",{class:"soft"},blockLine()),
+        h("button",{class:"btn primary big",onclick:function(){end();done();}},"Weiter")));
+    }});
+  },function(){closeFS();page(h("div",{class:"card center"},h("p",null,"Das Spiel konnte nicht geladen werden.")));setTimeout(function(){end();done();},1500);});
+}
 function playSudoku(done,opts){
   var g=P.g||{};
   function info(sz){var t=(g["sd"+sz]||{}).fast;return t?"Bestzeit "+fmtT(t):"noch keine Bestzeit";}
@@ -815,7 +841,7 @@ function startSudoku(size,done){
     }});
   },function(){end();box.textContent="Das Spiel konnte nicht geladen werden.";setTimeout(done,1500);});
 }
-var GAMES=[{id:"run",emoji:"🏃",name:"Jump-and-Run",text:"ein bisschen Action (3 Leben)",play:playRun},{id:"sudoku",emoji:"🧩",name:"Sudoku",text:"ein bisschen Denken",play:playSudoku}];
+var GAMES=[{id:"run",emoji:"🏃",name:"Jump-and-Run",text:"ein bisschen Action (3 Leben)",play:playRun},{id:"sudoku",emoji:"🧩",name:"Sudoku",text:"ein bisschen Denken",play:playSudoku},{id:"block",emoji:"🧱",name:"Hoppel-Blöcke",text:"stapeln und Hasen sammeln",play:playBlock}];
 function gameMenu(title,text,done,extra){
   mount(h("div",{class:"card center"},pic("kaninchen-winkt","hero"),h("h2",null,title),h("p",null,text),
     h("div",{class:"row",style:"justify-content:center"},
@@ -1097,6 +1123,7 @@ function pickKid(k){
 function gameVal(p,kind){
   var g=(p&&p.g)||{};
   if(kind==="run")return (g.run&&g.run.bm)||null;
+  if(kind==="block")return (g.block&&g.block.best)||null;
   if(kind==="sd6")return (g.sd6&&g.sd6.fast)||null;
   if(kind==="sd9")return (g.sd9&&g.sd9.fast)||null;
   return null;
@@ -1124,10 +1151,11 @@ function podia(){
     return h("button",{class:"chip"+(sdSize===x[0]?" on":""),onclick:function(){stay(function(){sdSize=x[0];if(view==="select")selectKid();});}},x[1]);}));
   return h("div",null,h("h2",null,"🏆 Spiele-Podeste"),
     podiumCard("🏃 Jump-and-Run – wer ist am weitesten gekommen?","run","high",function(v){return v+" m";}),
+    podiumCard("🧱 Hoppel-Blöcke – wer hat die meisten Punkte?","block","high",function(v){return v+" Punkte";}),
     podiumCard("🧩 Sudoku – wer war am schnellsten?",sdSize,"low",fmtT,chips));
 }
 function recordCard(){
-  var items=[["run","🏃 Jump-and-Run","high",function(v){return v+" m";}],["sd6","🧩 Sudoku klein","low",fmtT],["sd9","🧩 Sudoku groß","low",fmtT]];
+  var items=[["run","🏃 Jump-and-Run","high",function(v){return v+" m";}],["block","🧱 Hoppel-Blöcke","high",function(v){return v+" Punkte";}],["sd6","🧩 Sudoku klein","low",fmtT],["sd9","🧩 Sudoku groß","low",fmtT]];
   return h("div",{class:"card"},h("b",null,"🎮 Deine Rekorde"),items.map(function(it){
     var me=rankRows(gameRows(it[0]),it[2]).filter(function(r){return r.k.id===kid.id;})[0];
     return h("div",{class:"row",style:"justify-content:space-between;margin:4px 0 0;flex-wrap:nowrap"},h("span",null,it[1]),
@@ -1156,9 +1184,9 @@ function selectKid(){
     fam()?null:h("p",{class:"center"},h("button",{class:"btn small",onclick:connectScreen},"🔗 Mit Familie verbinden")));
 }
 function resetRecords(k,msg){
-  if(!confirm("Alle Spiel-Rekorde von "+k.name+" (Jump-and-Run und Sudoku) wirklich zurücksetzen? Das gilt auch auf den anderen Geräten."))return;
+  if(!confirm("Alle Spiel-Rekorde von "+k.name+" (Jump-and-Run, Hoppel-Blöcke und Sudoku) wirklich zurücksetzen? Das gilt auch auf den anderen Geräten."))return;
   var now=Date.now(),me=kid&&k.id===kid.id,p=normP(me?P:profileData(k));
-  p.g={};p.gz={run:now,sd6:now,sd9:now};
+  p.g={};p.gz={run:now,block:now,sd6:now,sd9:now};
   if(me)P=p;
   sj("vt:"+k.id,p);
   msg.textContent="Wird gespeichert …";msg.className="msg";
@@ -1170,7 +1198,7 @@ function resetRecords(k,msg){
 function resetCard(){
   var msg=h("div",{class:"msg"});
   return h("div",{class:"card"},h("h2",{style:"margin-top:0"},"🏆 Rekorde zurücksetzen"),
-    h("p",{class:"soft"},"Setzt die Jump-and-Run-Weite und die Sudoku-Bestzeiten eines Profils auf null zurück, auch auf den anderen Geräten. Der Lernstand der Vokabeln bleibt unberührt."),
+    h("p",{class:"soft"},"Setzt die Jump-and-Run-Weite, die Block-Punkte und die Sudoku-Bestzeiten eines Profils auf null zurück, auch auf den anderen Geräten. Der Lernstand der Vokabeln bleibt unberührt."),
     KIDS.map(function(k){return h("div",{class:"wl",style:"grid-template-columns:56px 1fr auto"},avatar(k),h("b",null,k.name),h("button",{class:"btn small",onclick:function(){resetRecords(k,msg);}},"Zurücksetzen"));}),msg);
 }
 function pinCard(){
@@ -1279,7 +1307,7 @@ function settings(noPull){
     pinCard(),
     resetCard(),
     h('div',{class:'card'},h('h2',{style:'margin-top:0'},'🎮 Spiele'),h('label',{class:'row'},gmBox,h('span',null,'Spiele als Belohnung anbieten')),
-      h('div',{class:'row',style:'align-items:center'},h('span',null,'Spielen darf man'),evSel,h('span',null,'–'),nSel,h('span',null,'(Jump-and-Run: je 3 Leben)')),h('p',{class:'soft'},'Nach einem Übungsdurchlauf (oder jedem zweiten, je nach Einstellung) darf das Kind mehrere Spiele wählen, jeweils Jump-and-Run oder ein Sudoku (klein 6×6 oder groß 9×9). Die Einstellung gilt für alle Geräte der Familie, sobald sie abgeglichen sind. Die Spielzeit zählt nicht als Lernzeit. Der weiteste Lauf und die schnellste Sudoku-Zeit stehen auf den Podesten der Profilwahl. Nur das Ein- und Ausschalten gilt für dieses Gerät.')),
+      h('div',{class:'row',style:'align-items:center'},h('span',null,'Spielen darf man'),evSel,h('span',null,'–'),nSel,h('span',null,'(Jump-and-Run: je 3 Leben)')),h('p',{class:'soft'},'Nach einem Übungsdurchlauf (oder jedem zweiten, je nach Einstellung) darf das Kind mehrere Spiele wählen, jeweils Jump-and-Run, Hoppel-Blöcke (Tetris-Art, eine Runde bis das Feld voll ist) oder ein Sudoku (klein 6×6 oder groß 9×9). Die Einstellung gilt für alle Geräte der Familie, sobald sie abgeglichen sind. Die Spielzeit zählt nicht als Lernzeit. Der weiteste Lauf, die meisten Block-Punkte und die schnellste Sudoku-Zeit stehen auf den Podesten der Profilwahl. Nur das Ein- und Ausschalten gilt für dieses Gerät.')),
     h('div',{class:'card'},h('h2',{style:'margin-top:0'},'Buchstabieren per Mikrofon'),
       SR?h('label',{class:'row'},mic,h('span',null,'Mikrofon in Stufe 6 anbieten')):h('p',null,'Dieser Browser unterstützt keine Spracherkennung. Stufe 6 läuft über die Buchstaben-Tasten.'),
       h('p',{class:'soft'},'Hinweis: Bei eingeschaltetem Mikrofon wird die Sprache vom Browser an einen Online-Dienst (Google bzw. Apple) zur Erkennung geschickt. Bitte nur einschalten, wenn das für euch in Ordnung ist. Ohne Mikrofon sagen die Kinder die Buchstaben laut und tippen sie an.')),
