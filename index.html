@@ -727,7 +727,7 @@ function cfg(){
   return {ev:c.ev===2?2:1,n:c.n>=1&&c.n<=5?c.n:3};
 }
 function gamesOn(){try{return localStorage.getItem("vt:games")!=="0";}catch(e){return true;}}
-var APPV="2026-10-20-5";
+var APPV="2026-10-20-6";
 function loadScript(src,ok,fail){
   window.__ls=window.__ls||{};
   if(window.__ls[src]){ok();return;}
@@ -1307,7 +1307,7 @@ function settings(noPull){
     pinCard(),
     resetCard(),
     h('div',{class:'card'},h('h2',{style:'margin-top:0'},'🎮 Spiele'),h('label',{class:'row'},gmBox,h('span',null,'Spiele als Belohnung anbieten')),
-      h('div',{class:'row',style:'align-items:center'},h('span',null,'Spielen darf man'),evSel,h('span',null,'–'),nSel,h('span',null,'(Jump-and-Run: je 3 Leben)')),h('p',{class:'soft'},'Nach einem Übungsdurchlauf (oder jedem zweiten, je nach Einstellung) darf das Kind mehrere Spiele wählen, jeweils Jump-and-Run, Hoppel-Blöcke (Tetris-Art, eine Runde bis das Feld voll ist) oder ein Sudoku (klein 6×6 oder groß 9×9). Die Einstellung gilt für alle Geräte der Familie, sobald sie abgeglichen sind. Die Spielzeit zählt nicht als Lernzeit. Der weiteste Lauf, die meisten Block-Punkte und die schnellste Sudoku-Zeit stehen auf den Podesten der Profilwahl. Nur das Ein- und Ausschalten gilt für dieses Gerät.')),
+      h('div',{class:'row',style:'align-items:center'},h('span',null,'Spielen darf man'),evSel,h('span',null,'–'),nSel,h('span',null,'(Jump-and-Run: je 3 Leben)')),h('p',{class:'soft'},'Nach einem Übungsdurchlauf (oder jedem zweiten, je nach Einstellung) darf das Kind mehrere Spiele wählen, jeweils Jump-and-Run, Hoppel-Blöcke (Block-Blast-Art: Steine aufs Feld ziehen, eine Runde bis nichts mehr passt) oder ein Sudoku (klein 6×6 oder groß 9×9). Die Einstellung gilt für alle Geräte der Familie, sobald sie abgeglichen sind. Die Spielzeit zählt nicht als Lernzeit. Der weiteste Lauf, die meisten Block-Punkte und die schnellste Sudoku-Zeit stehen auf den Podesten der Profilwahl. Nur das Ein- und Ausschalten gilt für dieses Gerät.')),
     h('div',{class:'card'},h('h2',{style:'margin-top:0'},'Buchstabieren per Mikrofon'),
       SR?h('label',{class:'row'},mic,h('span',null,'Mikrofon in Stufe 6 anbieten')):h('p',null,'Dieser Browser unterstützt keine Spracherkennung. Stufe 6 läuft über die Buchstaben-Tasten.'),
       h('p',{class:'soft'},'Hinweis: Bei eingeschaltetem Mikrofon wird die Sprache vom Browser an einen Online-Dienst (Google bzw. Apple) zur Erkennung geschickt. Bitte nur einschalten, wenn das für euch in Ordnung ist. Ohne Mikrofon sagen die Kinder die Buchstaben laut und tippen sie an.')),
