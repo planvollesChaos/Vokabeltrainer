@@ -5,6 +5,7 @@ Eine einzige `index.html`, keine Abhängigkeiten, läuft im Browser und speicher
 (`localStorage`, Schlüssel mit Präfix `vt:`). Keine Verbindung zur Schul-App.
 
 ## Lernen
+- **Redewendungen in Bausteinen:** Mehrteilige Einträge (turn right, across the bridge, want to help, cold and hot, can fly/swim/climb trees, lay eggs, give milk, eat grass …) haben `p` (Bausteine mit deutscher Bedeutung) und `sx` (Beispielsatz mit ___). Die Bausteine sind eigene Vokabeln (z. B. turn, right). Eine Wendung kommt erst als neues Wort dran, wenn alle Bausteine mindestens Stufe 4 haben. Stufe 1 der Wendung: jeden Baustein einzeln aufschreiben; Stufe 4: im Satz mit Übersetzung.
 - Nur Rechtschreibung einzelner Wörter, keine Grammatik.
 - 7 Stufen pro Wort: Entdecken · Lücken · Wortsalat · Tippen · Diktat · Buchstabieren · **Meister**
   (nur das deutsche Wort, ganz ohne Hilfe). Danach gilt das Wort als gelernt (5 Sterne).
@@ -43,4 +44,4 @@ Vorhanden: `kaninchen-*`, `ergebnis-0…5`, `profil-ellena|merle|eltern` (Merle 
 `siegel`, `diplom-1…3` (leere Urkunden), `hintergrund-hell-v2.webp`, `hintergrund-dunkel.jpg`.
 
 ## Startsammlung
-174 Wörter im Quelltext (`var BASE=`), eigene Wörter in `vt:extra`.
+196 Wörter im Quelltext (`var BASE=`), eigene Wörter in `vt:extra`.
