@@ -727,7 +727,7 @@ function cfg(){
   return {ev:c.ev===2?2:1,n:c.n>=1&&c.n<=5?c.n:3};
 }
 function gamesOn(){try{return localStorage.getItem("vt:games")!=="0";}catch(e){return true;}}
-var APPV="2026-10-20-4";
+var APPV="2026-10-20-5";
 function loadScript(src,ok,fail){
   window.__ls=window.__ls||{};
   if(window.__ls[src]){ok();return;}

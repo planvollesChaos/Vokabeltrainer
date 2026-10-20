@@ -1,5 +1,5 @@
 /* Hoppel-Blöcke – eigene Umsetzung ohne Bibliothek (Tetris-Art, Hoppel-Version).
-   Steine fallen von oben, volle Reihen verschwinden. Etwa jeder 10. bis 15. Stein ist ein einzelner Hasen-Stein.
+   Steine fallen von oben, volle Reihen verschwinden. Etwa jeder 5. bis 7. Stein ist ein Hasen-Stein (einzeln oder als Zweierblock).
    Drei Hasen in einer Reihe (waagerecht oder senkrecht) = Hoppel-Bonus: die drei Hasen verschwinden, Punkte extra.
    Je mehr Punkte, desto höher das Level: langsam schneller, schwierige Formen erst spät.
    Bedienung:
@@ -27,7 +27,8 @@ var SHAPES={
   P:{c:[[0,1],[1,0],[1,1],[1,2],[2,1]],k:6},
   U:{c:[[0,0],[0,2],[1,0],[1,1],[1,2]],k:4},
   W:{c:[[0,0],[1,0],[1,1],[2,1],[2,2]],k:5},
-  B:{c:[[0,0]],k:-1}
+  B:{c:[[0,0]],k:-1},
+  D:{c:[[0,0],[0,1]],k:-1}
 };
 
 function rotate(cells){
@@ -49,9 +50,9 @@ function weights(lv){
 }
 var untilBunny=0;
 function pickType(lv){
-  if(untilBunny<=0)untilBunny=10+Math.floor(Math.random()*6);
+  if(untilBunny<=0)untilBunny=5+Math.floor(Math.random()*3);
   untilBunny--;
-  if(untilBunny===0)return "B";
+  if(untilBunny===0)return Math.random()<0.5?"B":"D";
   var w=weights(lv),sum=0,k;
   for(k in w)sum+=w[k];
   var r=Math.random()*sum;
@@ -164,7 +165,7 @@ function start(box,opt){
     var p=s.cur;
     p.cells.forEach(function(q){
       var rr2=p.y+q[0],cc=p.x+q[1];
-      if(rr2>=0&&rr2<ROWS)s.grid[rr2][cc]={c:p.k,b:p.type==="B"};
+      if(rr2>=0&&rr2<ROWS)s.grid[rr2][cc]={c:p.k,b:p.type==="B"||p.type==="D"};
     });
     s.cur=null;
     resolve();
@@ -283,7 +284,7 @@ function start(box,opt){
       if(gy!==p.y)p.cells.forEach(function(q){
         g.strokeStyle="rgba(255,255,255,.45)";g.lineWidth=2;rr(g,(p.x+q[1])*cell+3,(gy+q[0])*cell+3,cell-6,cell-6,4);g.stroke();
       });
-      p.cells.forEach(function(q){if(p.y+q[0]>=0)paintCell(g,(p.x+q[1])*cell,(p.y+q[0])*cell,cell,{c:p.k,b:p.type==="B"});});
+      p.cells.forEach(function(q){if(p.y+q[0]>=0)paintCell(g,(p.x+q[1])*cell,(p.y+q[0])*cell,cell,{c:p.k,b:p.type==="B"||p.type==="D"});});
     }
     s.pops.forEach(function(pp){
       g.globalAlpha=Math.min(1,pp.life);g.fillStyle=pp.col;g.font="800 "+Math.round(cell*.8)+"px sans-serif";g.textAlign="center";g.textBaseline="middle";
@@ -303,7 +304,7 @@ function start(box,opt){
     g.setTransform(DPR,0,0,DPR,0,0);g.clearRect(0,0,nc*5,nc*4);
     if(!s.next)return;
     var w=widthOf(s.next.cells),h=heightOf(s.next.cells),ox=(5-w)/2*nc,oy=(4-h)/2*nc;
-    s.next.cells.forEach(function(q){paintCell(g,ox+q[1]*nc,oy+q[0]*nc,nc,{c:s.next.k,b:s.next.type==="B"});});
+    s.next.cells.forEach(function(q){paintCell(g,ox+q[1]*nc,oy+q[0]*nc,nc,{c:s.next.k,b:s.next.type==="B"||s.next.type==="D"});});
   }
 
   /* ---------- Schleife ---------- */
